@@ -48,7 +48,7 @@ bool GraphicsWindow::initWindow(){
     matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
     
     
-    testModel = new Model("models/cutCube.obj");
+    testModel = new Model("models/monkey.obj");
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
