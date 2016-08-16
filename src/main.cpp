@@ -6,10 +6,24 @@
 //  Copyright © 2016 Braeden Atlee. All rights reserved.
 //
 
-#include <iostream>
+#include "Settings.hpp"
+#include "GraphicsWindow.hpp"
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
+    
+    Settings* settings = new Settings();
+    settings->load();
+    
+    graphicsWindowInstance = new GraphicsWindow(settings, "Walls");
+    
+    graphicsWindowInstance->startLoop();
+    graphicsWindowInstance->cleanup();
+    
+    settings->save();
+    
+    delete graphicsWindowInstance;
+    delete settings;
+    
+    
     return 0;
 }
