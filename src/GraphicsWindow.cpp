@@ -151,5 +151,5 @@ void GraphicsWindow::startLoop(){
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
-    printf("Key: %d\n", key);
+    //printf("Key: %d\n", key);
 }
