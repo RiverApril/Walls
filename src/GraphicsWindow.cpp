@@ -46,13 +46,15 @@ bool GraphicsWindow::initWindow(){
     worldShader.link();
     
     matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
+    pointLights.push_back(&playerLight);
+    playerLight.color = vec3(1, 1, 1);
+    playerLight.intensity = 10;
     
-    
-    testModel = new Model("models/monkey.obj");
+    testModel = new Model("models/cutcube.obj");
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0, 0.0, 1.0, 1.0);
+    glClearColor(0.0, 0.5, 1.0, 1.0);
     
     return true;
     
@@ -93,6 +95,12 @@ void GraphicsWindow::startLoop(){
             cameraPosition.z -= cos(cameraRotation.y-radians(90.0f)) * -0.1;
             cameraPosition.x += sin(cameraRotation.y-radians(90.0f)) * -0.1;
         }
+        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+            cameraPosition.y += 0.1;
+        }
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            cameraPosition.y -= 0.1;
+        }
         //
         
         
@@ -106,9 +114,27 @@ void GraphicsWindow::startLoop(){
         matrixCamera = translate(matrixCamera, -cameraPosition);
         //
         
+        //set lights
+        
+        playerLight.position = cameraPosition;
+        
+        int count = std::min((int)pointLights.size(), 16);
+        glUniform1i(worldShader.getUniformLocation("pointLightCount"), count);
+        for(int i=0;i<count;i++){
+            string l = "pointLights["+to_string(i)+"]";
+            glUniform3f(worldShader.getUniformLocation(l+".position"), pointLights[i]->position.x, pointLights[i]->position.y, pointLights[i]->position.z);
+            glUniform3f(worldShader.getUniformLocation(l+".color"), pointLights[i]->color.r, pointLights[i]->color.g, pointLights[i]->color.b);
+            glUniform1f(worldShader.getUniformLocation(l+".intensity"), pointLights[i]->intensity);
+        }
+        //
+        
         //draw model
-        matrixView = matrixProjection * matrixCamera * testModel->matrix;
+        mat4 modelMatrix = mat4(); // will be set by object using model
+        matrixView = matrixProjection * matrixCamera * modelMatrix;
+        normalMatrix = mat3(transpose(inverse(modelMatrix)));
         glUniformMatrix4fv(worldShader.getUniformLocation("viewMatrix"), 1, false, &matrixView[0][0]);
+        glUniformMatrix4fv(worldShader.getUniformLocation("modelMatrix"), 1, false, &modelMatrix[0][0]);
+        glUniformMatrix3fv(worldShader.getUniformLocation("normalMatrix"), 1, false, &normalMatrix[0][0]);
         testModel->draw();
         //
         
@@ -122,10 +148,6 @@ void GraphicsWindow::startLoop(){
             printf("Uh oh, we've got a GL error somewhere: 0x%X\n", error);
         }
     }
-}
-
-void GraphicsWindow::cleanup(){
-    
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){

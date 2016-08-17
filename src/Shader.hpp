@@ -37,6 +37,8 @@ struct ShaderProgram{
     bool link();
     void use();
     
+    map<string, int> uniformLocations;
+    
     int getUniformLocation(string s);
     
 private:

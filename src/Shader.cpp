@@ -64,11 +64,17 @@ void ShaderProgram::use(){
 }
 
 int ShaderProgram::getUniformLocation(string s){
-    int i = glGetUniformLocation(pointer, s.c_str());
-    if(i == -1){
-        printf("Uniform '%s' not found.\n", s.c_str());
+    if(uniformLocations.count(s) == 0){
+        int i = glGetUniformLocation(pointer, s.c_str());
+        if(i == -1){
+            printf("Uniform '%s' not found.\n", s.c_str());
+        }else{
+            uniformLocations[s] = i;
+        }
+        return i;
+    }else{
+        return uniformLocations[s];
     }
-    return i;
 }
 
 

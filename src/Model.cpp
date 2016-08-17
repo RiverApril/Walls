@@ -27,8 +27,6 @@ void Model::make(){
     
     printf("Making Model: %s\n", filename.c_str());
     
-    uint nextI = 0;
-    
     ifstream ifs(filename.c_str());
     
     if (ifs) {
@@ -68,8 +66,9 @@ void Model::make(){
                 
                 string fs[3];
                 iss >> fs[0] >> fs[1] >> fs[2];
-                
-                for (int i = 0; i < 3;i++) {//0, 1, 2
+                    
+                for (int i = 0; i < 3;i++) { // 0, 1, 2
+                    bool noUV = fs[i].find("//") != std::string::npos;
                     for(int j=0;j<fs[i].size();j++){
                         if(fs[i][j] == '/'){
                             fs[i][j] = ' ';
@@ -77,13 +76,29 @@ void Model::make(){
                     }
                     istringstream fss(fs[i]);
                     
-                    int v, t, n;
-                    fss >> v >> t >> n;
+                    Vertex vert;
                     
-                    vertices.push_back(Vertex(vertexList[v], vec4(1, 1, 1, 1), textureCoordList[t], normalList[n]));
-                    indices.push_back(nextI);
-                    nextI++;
+                    if(noUV){
+                        int v, n;
+                        fss >> v >> n;
+                        
+                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1),/* textureCoordList[t],*/ normalList[n-1]);
+                        
+                    }else{
+                        int v, t, n;
+                        fss >> v >> t >> n;
+                        
+                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1),/* textureCoordList[t],*/ normalList[n-1]);
+                    }
                     
+                    std::vector<Vertex>::iterator vi = find(vertices.begin(), vertices.end(), vert);
+                    
+                    if(vi == vertices.end()){
+                        vertices.push_back(vert);
+                        indices.push_back((unsigned int)vertices.size()-1);
+                    }else{
+                        indices.push_back((unsigned int)(vi - vertices.begin()));
+                    }
                 }
                 
             }

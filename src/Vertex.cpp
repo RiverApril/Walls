@@ -7,3 +7,11 @@
 //
 
 #include "Vertex.hpp"
+
+bool operator!=(const Vertex& a, const Vertex& b){
+    return (a.Position != b.Position) || (a.Color != b.Color) || (a.Normal != b.Normal);
+}
+
+bool operator==(const Vertex& a, const Vertex& b){
+    return !(a!=b);
+}

@@ -37,8 +37,6 @@ struct Mesh{
     
     thread makeThread;
     
-    mat4 matrix;
-    
     Mesh();
     virtual ~Mesh(){}
     

@@ -84,10 +84,7 @@ void Mesh::render(){
     glVertexAttribPointer(1, 4, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToColor);
     
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToUV);
-    
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
+    glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
     
     glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0);
 }

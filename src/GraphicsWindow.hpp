@@ -14,6 +14,12 @@
 #include "Shader.hpp"
 #include "Model.hpp"
 
+struct PointLight{
+    vec3 position;
+    vec3 color;
+    float intensity;
+};
+
 class GraphicsWindow{
 public:
     
@@ -32,12 +38,16 @@ public:
     mat4 matrixCamera;
     
     mat4 matrixView;
+    mat3 normalMatrix;
     
     vec3 cameraPosition;
     vec3 cameraRotation;
     
     dvec2 mousePos;
     dvec2 mousePosPrev;
+    
+    vector<PointLight*> pointLights;
+    PointLight playerLight = PointLight();
     
     long tick = 0;
     
@@ -50,7 +60,6 @@ public:
     
     bool initWindow();
     void startLoop();
-    void cleanup();
     
 };
 

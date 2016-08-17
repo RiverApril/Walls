@@ -17,7 +17,6 @@ int main(int argc, const char * argv[]) {
     graphicsWindowInstance = new GraphicsWindow(settings, "Walls");
     
     graphicsWindowInstance->startLoop();
-    graphicsWindowInstance->cleanup();
     
     settings->save();
     
