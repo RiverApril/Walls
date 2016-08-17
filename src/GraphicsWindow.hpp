@@ -13,12 +13,8 @@
 #include "Settings.hpp"
 #include "Shader.hpp"
 #include "Model.hpp"
-
-struct PointLight{
-    vec3 position;
-    vec3 color;
-    float intensity;
-};
+#include "Scene.hpp"
+#include "ActorPlayer.hpp"
 
 class GraphicsWindow{
 public:
@@ -31,7 +27,6 @@ public:
     
     GLFWwindow* window;
     ShaderProgram worldShader;
-    Model* testModel;
     
     
     mat4 matrixProjection;
@@ -45,9 +40,11 @@ public:
     
     dvec2 mousePos;
     dvec2 mousePosPrev;
+    dvec2 mousePosDelta;
     
-    vector<PointLight*> pointLights;
-    PointLight playerLight = PointLight();
+    ActorPlayer* player;
+    
+    Scene* activeScene;
     
     long tick = 0;
     

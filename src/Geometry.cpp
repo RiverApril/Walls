@@ -21,4 +21,10 @@ Point2 operator/(const Point2& a, const int b){return Point2(a.x/b, a.y/b);}
 
 
 
+bool AABB::intersects(AABB& other){
+    return abs(center.x - other.center.x) <= (radii.x + other.radii.x) &&
+           abs(center.y - other.center.y) <= (radii.y + other.radii.y) &&
+           abs(center.z - other.center.z) <= (radii.z + other.radii.z);
+}
+
 

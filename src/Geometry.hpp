@@ -9,6 +9,8 @@
 #ifndef Geometry_hpp
 #define Geometry_hpp
 
+#include "Headers.hpp"
+
 struct Point2{
     int x, y;
     
@@ -25,5 +27,12 @@ Point2 operator+(const Point2& a, const int b);
 Point2 operator-(const Point2& a, const int b);
 Point2 operator*(const Point2& a, const int b);
 Point2 operator/(const Point2& a, const int b);
+
+struct AABB{
+    vec3 center;
+    vec3 radii;
+    
+    bool intersects(AABB& other);
+};
 
 #endif /* Geometry_hpp */

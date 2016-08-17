@@ -46,15 +46,26 @@ bool GraphicsWindow::initWindow(){
     worldShader.link();
     
     matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
-    pointLights.push_back(&playerLight);
-    playerLight.color = vec3(1, 1, 1);
-    playerLight.intensity = 10;
     
-    testModel = new Model("models/cutcube.obj");
+    Models::initModels();
+    
+    
+    //Setup Scene
+    
+    activeScene = new Scene();
+    
+    player = new ActorPlayer(activeScene);
+    activeScene->actors.push_back(player);
+    
+    activeScene->props.push_back(new Prop(vec3(20, .5, 20), vec3(0, 0, 0)));
+    activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(1, 1, 0)));
+    //
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glClearColor(0.0, 0.5, 1.0, 1.0);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     
     return true;
     
@@ -69,38 +80,7 @@ void GraphicsWindow::startLoop(){
         //user input
         mousePosPrev = mousePos;
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
-        dvec2 mousePosDelta = mousePos - mousePosPrev;
-        cameraRotation.y += mousePosDelta.x * settings->lookSpeed;
-        cameraRotation.x += mousePosDelta.y * settings->lookSpeed;
-        if(cameraRotation.x > radians(89.0f)){
-            cameraRotation.x = radians(89.0f);
-        }
-        if(cameraRotation.x < -radians(89.0f)){
-            cameraRotation.x = -radians(89.0f);
-        }
-        
-        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            cameraPosition.z -= cos(cameraRotation.y) * 0.1;
-            cameraPosition.x += sin(cameraRotation.y) * 0.1;
-        }
-        if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            cameraPosition.z -= cos(cameraRotation.y) * -0.1;
-            cameraPosition.x += sin(cameraRotation.y) * -0.1;
-        }
-        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-            cameraPosition.z -= cos(cameraRotation.y-radians(90.0f)) * 0.1;
-            cameraPosition.x += sin(cameraRotation.y-radians(90.0f)) * 0.1;
-        }
-        if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-            cameraPosition.z -= cos(cameraRotation.y-radians(90.0f)) * -0.1;
-            cameraPosition.x += sin(cameraRotation.y-radians(90.0f)) * -0.1;
-        }
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-            cameraPosition.y += 0.1;
-        }
-        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-            cameraPosition.y -= 0.1;
-        }
+        mousePosDelta = mousePos - mousePosPrev;
         //
         
         
@@ -109,34 +89,13 @@ void GraphicsWindow::startLoop(){
         
         //set camera
         matrixCamera = mat4();
+        matrixCamera = rotate<float>(matrixCamera, cameraRotation.z, vec3(0, 0, 1.0f));
         matrixCamera = rotate<float>(matrixCamera, cameraRotation.x, vec3(1.0f, 0, 0));
         matrixCamera = rotate<float>(matrixCamera, cameraRotation.y, vec3(0, 1.0f, 0));
         matrixCamera = translate(matrixCamera, -cameraPosition);
         //
         
-        //set lights
-        
-        playerLight.position = cameraPosition;
-        
-        int count = std::min((int)pointLights.size(), 16);
-        glUniform1i(worldShader.getUniformLocation("pointLightCount"), count);
-        for(int i=0;i<count;i++){
-            string l = "pointLights["+to_string(i)+"]";
-            glUniform3f(worldShader.getUniformLocation(l+".position"), pointLights[i]->position.x, pointLights[i]->position.y, pointLights[i]->position.z);
-            glUniform3f(worldShader.getUniformLocation(l+".color"), pointLights[i]->color.r, pointLights[i]->color.g, pointLights[i]->color.b);
-            glUniform1f(worldShader.getUniformLocation(l+".intensity"), pointLights[i]->intensity);
-        }
-        //
-        
-        //draw model
-        mat4 modelMatrix = mat4(); // will be set by object using model
-        matrixView = matrixProjection * matrixCamera * modelMatrix;
-        normalMatrix = mat3(transpose(inverse(modelMatrix)));
-        glUniformMatrix4fv(worldShader.getUniformLocation("viewMatrix"), 1, false, &matrixView[0][0]);
-        glUniformMatrix4fv(worldShader.getUniformLocation("modelMatrix"), 1, false, &modelMatrix[0][0]);
-        glUniformMatrix3fv(worldShader.getUniformLocation("normalMatrix"), 1, false, &normalMatrix[0][0]);
-        testModel->draw();
-        //
+        activeScene->render(this);
         
         
         

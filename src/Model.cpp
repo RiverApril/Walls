@@ -17,14 +17,6 @@ Model::Model(string filename) : filename(filename){
 
 void Model::make(){
     
-    /*vertices.push_back(Vertex(vec3(0, 0.5f, 0), vec4(0, 1, 1, 1), vec3(0, 0, 0), vec3(0, 0, 0)));
-    vertices.push_back(Vertex(vec3(0.5f, -0.5f, 0), vec4(1, 1, 0, 1), vec3(0, 0, 0), vec3(0, 0, 0)));
-    vertices.push_back(Vertex(vec3(-0.5f, -0.5f, 0), vec4(1, 0, 1, 1), vec3(0, 0, 0), vec3(0, 0, 0)));
-    
-    indices.push_back(0);
-    indices.push_back(1);
-    indices.push_back(2);*/
-    
     printf("Making Model: %s\n", filename.c_str());
     
     ifstream ifs(filename.c_str());
@@ -113,3 +105,19 @@ void Model::make(){
     
     
 }
+
+
+namespace Models{
+    
+    Model* test;
+    Model* platform;
+    Model* cube;
+    
+    void initModels(){
+        test = new Model("models/monkey.obj");
+        platform = new Model("models/platform.obj");
+        cube = new Model("models/cube.obj");
+    }
+    
+}
+

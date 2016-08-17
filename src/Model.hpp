@@ -15,7 +15,6 @@
 struct Model : public Mesh{
     
     string filename;
-    string name;
     
     Model(string filename);
     ~Model(){}
@@ -23,5 +22,13 @@ struct Model : public Mesh{
     virtual void make();
     
 };
+
+namespace Models{
+    extern Model* cutCube;
+    extern Model* platform;
+    extern Model* cube;
+    
+    void initModels();
+}
 
 #endif /* Model_hpp */

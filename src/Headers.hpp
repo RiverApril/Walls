@@ -26,4 +26,6 @@
 using namespace std;
 using namespace glm;
 
+#define removeFromVector(vec, ele) vec.erase(std::remove(vec.begin(), vec.end(), ele), vec.end());
+
 #endif /* Headers_hpp */
