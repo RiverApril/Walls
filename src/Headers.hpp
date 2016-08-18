@@ -28,4 +28,6 @@ using namespace glm;
 
 #define removeFromVector(vec, ele) vec.erase(std::remove(vec.begin(), vec.end(), ele), vec.end());
 
+#define clamp(v, low, high) (v<low?low:(v>high?high:v))
+
 #endif /* Headers_hpp */

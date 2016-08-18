@@ -40,6 +40,7 @@ bool GraphicsWindow::initWindow(){
     printf("OpenGL version supported: %s\n", version);
     
     glfwSetKeyCallback(window, keyCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     worldShader.addShader(Shader("shaders/world.vert.glsl", GL_VERTEX_SHADER));
     worldShader.addShader(Shader("shaders/world.frag.glsl", GL_FRAGMENT_SHADER));
@@ -56,6 +57,8 @@ bool GraphicsWindow::initWindow(){
     
     player = new ActorPlayer(activeScene);
     activeScene->actors.push_back(player);
+    
+    player->box.center.y = 10;
     
     activeScene->props.push_back(new Prop(vec3(20, .5, 20), vec3(0, 0, 0)));
     activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(1, 1, 0)));
@@ -80,7 +83,11 @@ void GraphicsWindow::startLoop(){
         //user input
         mousePosPrev = mousePos;
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
-        mousePosDelta = mousePos - mousePosPrev;
+        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
+            mousePosDelta = mousePos - mousePosPrev;
+        }else{
+            mousePosDelta = dvec2();
+        }
         //
         
         
@@ -111,4 +118,11 @@ void GraphicsWindow::startLoop(){
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
     //printf("Key: %d\n", key);
+    if(key == GLFW_KEY_ESCAPE){
+        if(action == GLFW_PRESS){
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }else if(action == GLFW_RELEASE){
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+    }
 }

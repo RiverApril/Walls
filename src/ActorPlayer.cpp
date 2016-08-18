@@ -33,6 +33,7 @@ bool ActorPlayer::tryToMove(vec3 diff){
     for(Prop* p : activeScene->props){
         if(p->box.intersects(diffBox) && !p->box.intersects(box)){
             hit = true;
+            break;
         }
     }
     
@@ -55,37 +56,75 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     vec3 diff;
     
+    float jumpSpeed = 0.2;
+    float moveSpeed = 0.001;
+    
+    if(onGround){
+        moveSpeed = 0.05;
+        if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
+            diff.y += jumpSpeed;
+        }
+    }
+    
     if(glfwGetKey(gw->window, GLFW_KEY_W) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y) * 0.1;
-        diff.x += sin(lookRotation.y) * 0.1;
+        diff.z -= cos(lookRotation.y) * moveSpeed;
+        diff.x += sin(lookRotation.y) * moveSpeed;
     }
     if(glfwGetKey(gw->window, GLFW_KEY_S) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y) * -0.1;
-        diff.x += sin(lookRotation.y) * -0.1;
+        diff.z -= cos(lookRotation.y) * -moveSpeed;
+        diff.x += sin(lookRotation.y) * -moveSpeed;
     }
     if(glfwGetKey(gw->window, GLFW_KEY_A) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y-radians(90.0f)) * 0.1;
-        diff.x += sin(lookRotation.y-radians(90.0f)) * 0.1;
+        diff.z -= cos(lookRotation.y-radians(90.0f)) * moveSpeed;
+        diff.x += sin(lookRotation.y-radians(90.0f)) * moveSpeed;
     }
     if(glfwGetKey(gw->window, GLFW_KEY_D) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y-radians(90.0f)) * -0.1;
-        diff.x += sin(lookRotation.y-radians(90.0f)) * -0.1;
+        diff.z -= cos(lookRotation.y-radians(90.0f)) * -moveSpeed;
+        diff.x += sin(lookRotation.y-radians(90.0f)) * -moveSpeed;
     }
-    if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
-        diff.y += 0.1;
-    }
-    if(glfwGetKey(gw->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-        diff.y -= 0.1;
-    }
+    //if(glfwGetKey(gw->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+    //    diff.y -= 0.1;
+    //}
+    
+    velocity += diff;
     
     
-    if(!tryToMove(diff)){
-        vec3 xdiff = vec3(diff.x, 0, 0);
-        vec3 ydiff = vec3(0, diff.y, 0);
-        vec3 zdiff = vec3(0, 0, diff.z);
-        tryToMove(xdiff);
-        tryToMove(ydiff);
-        tryToMove(zdiff);
+    if(!tryToMove(velocity)){
+        float maxDiff = 0.1;
+        vec3 xdiff = vec3(clamp(velocity.x, -maxDiff, maxDiff), 0, 0);
+        vec3 ydiff = vec3(0, clamp(velocity.y, -maxDiff, maxDiff), 0);
+        vec3 zdiff = vec3(0, 0, clamp(velocity.z, -maxDiff, maxDiff));
+        for(float i = 0; i < abs(velocity.x); i+=maxDiff){
+            tryToMove(xdiff);
+        }
+        for(float i = 0; i < abs(velocity.y); i+=maxDiff){
+            tryToMove(ydiff);
+        }
+        for(float i = 0; i < abs(velocity.z); i+=maxDiff){
+            tryToMove(zdiff);
+        }
+    }
+    
+    onGround = false;
+    
+    AABB yBox = box;
+    yBox.center.y += clamp(velocity.y, -.1, .1);
+    
+    for(Prop* p : activeScene->props){
+        if(p->box.intersects(yBox) && !p->box.intersects(box)){
+            onGround = velocity.y < 0;
+            velocity.y = 0;
+            break;
+        }
+    }
+    
+    if(onGround){
+        velocity.x *= 0.5;
+        velocity.z *= 0.5;
+    }else{
+        velocity.x *= 0.99;
+        velocity.z *= 0.99;
+        velocity.y -= 0.01;
     }
     
     gw->cameraPosition = box.center;
