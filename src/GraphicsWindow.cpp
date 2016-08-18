@@ -61,12 +61,14 @@ bool GraphicsWindow::initWindow(){
     player->box.center.y = 10;
     
     activeScene->props.push_back(new Prop(vec3(20, .5, 20), vec3(0, 0, 0)));
-    activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(1, 1, 0)));
+    activeScene->props.push_back(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
+    activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
+    activeScene->props.push_back(new Prop(Models::monkey, vec3(1, 1, 0)));
     //
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0, 0.5, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     
@@ -102,6 +104,7 @@ void GraphicsWindow::startLoop(){
         matrixCamera = translate(matrixCamera, -cameraPosition);
         //
         
+        //Render scene
         activeScene->render(this);
         
         
@@ -116,8 +119,7 @@ void GraphicsWindow::startLoop(){
     }
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
-    //printf("Key: %d\n", key);
+void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
     if(key == GLFW_KEY_ESCAPE){
         if(action == GLFW_PRESS){
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -125,4 +127,59 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
+    if(action == GLFW_PRESS){
+        float yaw = cameraRotation.y;
+        float pitch = cameraRotation.x;
+        
+        /* 
+         
+         //mine:
+         (pitch, yaw ) -> (x,  y,  z)
+         (0    ,  0  ) -> (0,  0, -1)
+         (pi/2 ,  0  ) -> (0, -1,  0)
+         (0    , pi/2) -> (1,  0,  0)
+         
+         //should be:
+         (pitch, yaw)  -> (x, y, z)
+         (0,     0)    -> (1, 0, 0)
+         (pi/2,  0)    -> (0, 1, 0)
+         (0,    -pi/2) -> (0, 0, 1)
+         
+         //original formula:
+         x = cos(yaw) * cos(pitch)
+         y = sin(pitch)
+         z = sin(-yaw) * cos(pitch)
+         
+         So I swapped the x and z, and negated y and z
+         
+        */
+        vec3 cameraLook = normalize(vec3(sin(yaw)*cos(pitch),
+                                         -sin(pitch),
+                                         -cos(yaw)*cos(pitch)));
+        if(key == GLFW_KEY_1){
+            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
+            if(ray.hit){
+                activeScene->props.push_back(new Prop(vec3(.5, .5, .5), ray.position));
+            }
+        }
+        /*if(key == GLFW_KEY_2){
+            activeScene->props.push_back(new Prop(vec3(.01, .01, .01), cameraPosition+cameraLook));
+            printf("Pitch: %0.2f, Yaw: %0.2f\n", yaw, pitch);
+        }*/
+    }
 }
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if(window == graphicsWindowInstance->window){
+        graphicsWindowInstance->keyEvent(key, scancode, action, mods);
+    }else{
+        printf("Another window?");
+    }
+    
+}
+
+
+
+
+
+

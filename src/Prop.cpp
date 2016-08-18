@@ -14,7 +14,11 @@ void Prop::render(GraphicsWindow* gw){
     
     matrix = mat4();
     matrix = translate(matrix, box.center);
-    matrix = scale(matrix, box.radii);
+    if(mustScale){
+        matrix = scale(matrix, box.radii);
+    }else{
+        box.radii = mesh->radii;
+    }
     
     gw->matrixView = gw->matrixProjection * gw->matrixCamera * matrix;
     gw->normalMatrix = mat3(transpose(inverse(matrix)));

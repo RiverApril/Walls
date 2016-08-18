@@ -11,11 +11,26 @@
 
 void makeMesh(Mesh* mesh){
     mesh->make();
+    mesh->calculateRadii();
     mesh->status = needsCompile;
 }
 
 Mesh::Mesh(){
     
+}
+
+void Mesh::calculateRadii(){
+    for(Vertex vert : vertices){
+        if(abs(vert.Position.x) > radii.x){
+            radii.x = abs(vert.Position.x);
+        }
+        if(abs(vert.Position.y) > radii.y){
+            radii.y = abs(vert.Position.y);
+        }
+        if(abs(vert.Position.z) > radii.z){
+            radii.z = abs(vert.Position.z);
+        }
+    }
 }
 
 

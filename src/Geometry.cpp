@@ -27,4 +27,38 @@ bool AABB::intersects(AABB& other){
            abs(center.z - other.center.z) <= (radii.z + other.radii.z);
 }
 
+bool AABB::intersects(vec3 origin, vec3 look, vec3& hit, float& dist) {
+    
+    vec3 invLook = 1.0f / look;
+    
+    float tx1 = (center.x - radii.x - origin.x)*invLook.x;
+    float tx2 = (center.x + radii.x - origin.x)*invLook.x;
+    
+    float tmin = std::min(tx1, tx2);
+    float tmax = std::max(tx1, tx2);
+    
+    float ty1 = (center.y - radii.y - origin.y)*invLook.y;
+    float ty2 = (center.y + radii.y - origin.y)*invLook.y;
+    
+    tmin = std::max(tmin, std::min(ty1, ty2));
+    tmax = std::min(tmax, std::max(ty1, ty2));
+    
+    float tz1 = (center.z - radii.z - origin.z)*invLook.z;
+    float tz2 = (center.z + radii.z - origin.z)*invLook.z;
+    
+    tmin = std::max(tmin, std::min(tz1, tz2));
+    tmax = std::min(tmax, std::max(tz1, tz2));
+    
+    if(tmax >= tmin){
+        float tm = tmin;
+        if(tmin < 0){
+            tm = -tmax;
+        }
+        hit = origin+(tm*look);
+        dist = abs(tm);
+        return true;
+    }else{
+        return false;
+    }
+}
 

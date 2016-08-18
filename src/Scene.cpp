@@ -8,12 +8,14 @@
 
 #include "Scene.hpp"
 #include "GraphicsWindow.hpp"
+#include "Ray.hpp"
 
 
 void Scene::render(GraphicsWindow *gw){
     
     
     //set lights
+    
     int count = std::min((int)pointLights.size(), 16);
     glUniform1i(gw->worldShader.getUniformLocation("pointLightCount"), count);
     for(int i=0;i<count;i++){
@@ -37,3 +39,24 @@ void Scene::render(GraphicsWindow *gw){
     //
     
 }
+
+RayData Scene::rayProps(vec3 origin, vec3 look){
+    RayData data;
+    float close = INFINITY;
+    for(Prop* p : props){
+        vec3 hit;
+        float dist;
+        if(p->box.intersects(origin, look, hit, dist)){
+            if(dist < close){
+                data.hit = true;
+                data.position = hit;
+                data.prop = p;
+                close = dist;
+            }
+        }
+    }
+    return data;
+}
+
+
+

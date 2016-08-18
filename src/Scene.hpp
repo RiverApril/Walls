@@ -13,6 +13,7 @@
 #include "Actor.hpp"
 #include "Prop.hpp"
 #include "PointLight.hpp"
+#include "Ray.hpp"
 
 class GraphicsWindow;
 
@@ -26,6 +27,8 @@ public:
     vector<PointLight*> pointLights;
     
     void render(GraphicsWindow* gw);
+    
+    RayData rayProps(vec3 origin, vec3 look);
     
     
 };

@@ -23,15 +23,18 @@ public:
     
     mat4 matrix;
     Mesh* mesh;
+    bool mustScale;
     
     Prop(Mesh* mesh, vec3 pos) : mesh(mesh){
         box.center = pos;
+        mustScale = false;
     }
     
     Prop(vec3 scale, vec3 pos){
         mesh = Models::cube;
         box.radii = scale;
         box.center = pos;
+        mustScale = true;
     }
     
     void render(GraphicsWindow* gw);

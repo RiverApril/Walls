@@ -37,11 +37,14 @@ struct Mesh{
     
     thread makeThread;
     
+    vec3 radii;
+    
     Mesh();
     virtual ~Mesh(){}
     
     void draw();
     virtual void make(){}
+    void calculateRadii();
     void compile();
     void render();
     void cleanup();

@@ -33,6 +33,8 @@ struct AABB{
     vec3 radii;
     
     bool intersects(AABB& other);
+    
+    bool intersects(vec3 origin, vec3 look, vec3& hit, float& dist);
 };
 
 #endif /* Geometry_hpp */

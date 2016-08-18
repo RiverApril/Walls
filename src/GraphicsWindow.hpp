@@ -58,6 +58,8 @@ public:
     bool initWindow();
     void startLoop();
     
+    void keyEvent(int key, int scancode, int action, int mods);
+    
 };
 
 extern GraphicsWindow* graphicsWindowInstance;

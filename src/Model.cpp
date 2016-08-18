@@ -109,13 +109,11 @@ void Model::make(){
 
 namespace Models{
     
-    Model* test;
-    Model* platform;
+    Model* monkey;
     Model* cube;
     
     void initModels(){
-        test = new Model("models/monkey.obj");
-        platform = new Model("models/platform.obj");
+        monkey = new Model("models/monkey.obj");
         cube = new Model("models/cube.obj");
     }
     
