@@ -87,7 +87,7 @@ bool GraphicsWindow::initWindow(){
 }
 
 void GraphicsWindow::makeProjectionMatrix(){
-    matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
+    matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
 }
 
 void GraphicsWindow::startLoop(){
@@ -158,13 +158,15 @@ void GraphicsWindow::startLoop(){
         */
         cameraLook = normalize(vec3(sin(yaw)*cos(pitch), -sin(pitch), -cos(yaw)*cos(pitch)));
         
+        okayToPlace = false;
+        selectedProp = nullptr;
         if(propToPlace){
             RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
-            rayHit = ray.hit;
             if(ray.hit){
+                okayToPlace = true;
                 vec3 newPos = ray.prop->box.center + ((ray.prop->box.radii + propToPlace->box.radii) * sideNormal(ray.side));
                 newPos = (ray.position * sideInvMask(ray.side)) + (newPos * sideMask(ray.side));
-                newPos = roundTo(newPos, 4);
+                newPos = roundTo(newPos, 8);
                 propToPlace->box.center = newPos;
                 
                 bool collision = false;
@@ -175,19 +177,29 @@ void GraphicsWindow::startLoop(){
                     }
                 }
                 
-                //glDisable(GL_DEPTH_TEST);
                 glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
                 if(collision){
+                    okayToPlace = false;
                     glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 0, 0, .5);
                 }else{
                     glUniform4f(worldShader.getUniformLocation("colorOverride"), 0, 1, 0, .5);
                 }
                 propToPlace->render(this);
                 glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
-                //glEnable(GL_DEPTH_TEST);
                 
             }
             
+        }else{
+            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
+            if(ray.hit){
+                glDisable(GL_DEPTH_TEST);
+                glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
+                glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 1, 0, .5);
+                ray.prop->render(this);
+                glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
+                glEnable(GL_DEPTH_TEST);
+                selectedProp = ray.prop;
+            }
         }
         
         
@@ -216,11 +228,28 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                 delete propToPlace;
                 propToPlace = nullptr;
             }
-            propToPlace = new Prop(vec3(.25, .25, .25), vec3(0, 0, 0));
+            propToPlace = new Prop(vec3(.5, .5, .5), vec3(0, 0, 0));
         }else if(key == GLFW_KEY_2){
-            if(propToPlace && rayHit){
+            if(propToPlace){
+                delete propToPlace;
+                propToPlace = nullptr;
+            }
+            propToPlace = new Prop(vec3(.25, .25, .25), vec3(0, 0, 0));
+        }else if(key == GLFW_KEY_3){
+            if(propToPlace){
+                delete propToPlace;
+                propToPlace = nullptr;
+            }
+            propToPlace = new Prop(vec3(.125, .125, .125), vec3(0, 0, 0));
+        }else if(key == GLFW_KEY_ENTER){
+            if(propToPlace && okayToPlace){
                 activeScene->props.push_back(propToPlace);
                 propToPlace = nullptr;
+            }
+        }else if(key == GLFW_KEY_BACKSPACE){
+            if(selectedProp){
+                removeFromVector(activeScene->props, selectedProp);
+                selectedProp = nullptr;
             }
         }
     }

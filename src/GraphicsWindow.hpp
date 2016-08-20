@@ -39,7 +39,8 @@ public:
     vec3 cameraRotation;
     vec3 cameraLook;
     
-    bool rayHit = false;
+    bool okayToPlace = false;
+    Prop* selectedProp = nullptr;
     
     dvec2 mousePos;
     dvec2 mousePosPrev;

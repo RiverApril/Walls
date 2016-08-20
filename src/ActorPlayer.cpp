@@ -14,8 +14,8 @@
 
 
 ActorPlayer::ActorPlayer(Scene* scene){
-    light.color = vec3(1.0, 0.8, 0.5);
-    light.intensity = 12;
+    light.color = vec3(1.0, 1.0, 1.0);
+    light.intensity = 24;
     activeScene = scene;
     activeScene->pointLights.push_back(&light);
     
@@ -94,22 +94,25 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     
     if(!tryToMove(velocity)){
-        float maxDiff = moveSpeed;
+        float maxDiff = 0.125;
         vec3 xdiff = vec3(clamp(velocity.x, -maxDiff, maxDiff), 0, 0);
         vec3 ydiff = vec3(0, clamp(velocity.y, -maxDiff, maxDiff), 0);
         vec3 zdiff = vec3(0, 0, clamp(velocity.z, -maxDiff, maxDiff));
         for(float i = 0; i < abs(velocity.x); i+=maxDiff){
             if(!tryToMove(xdiff)){
+                velocity.x = 0;
                 break;
             }
         }
         for(float i = 0; i < abs(velocity.y); i+=maxDiff){
             if(!tryToMove(ydiff)){
+                velocity.y = 0;
                 break;
             }
         }
         for(float i = 0; i < abs(velocity.z); i+=maxDiff){
             if(!tryToMove(zdiff)){
+                velocity.z = 0;
                 break;
             }
         }
@@ -118,11 +121,15 @@ void ActorPlayer::render(GraphicsWindow* gw){
     onGround = false;
     
     AABB yBox = box;
-    yBox.center.y += clamp(velocity.y, -.1, .1);
+    if(velocity.y == 0){
+        yBox.center.y -= 0.1;
+    }else{
+        yBox.center.y += clamp(velocity.y, -.1, .1);
+    }
     
     for(Prop* p : activeScene->props){
         if(p->box.intersects(yBox) && !p->box.intersects(box)){
-            onGround = velocity.y < 0;
+            onGround = velocity.y <= 0;
             velocity.y = 0;
             break;
         }
@@ -137,7 +144,7 @@ void ActorPlayer::render(GraphicsWindow* gw){
         velocity.y -= gravity;
     }
     
-    gw->cameraPosition = box.center;
+    gw->cameraPosition = box.center+vec3(0, box.radii.y, 0);
     gw->cameraRotation = lookRotation;
-    light.position = box.center;
+    light.position = gw->cameraPosition;
 }
