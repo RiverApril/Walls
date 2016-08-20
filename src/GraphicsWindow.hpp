@@ -53,6 +53,10 @@ public:
     
     Prop* propToPlace = nullptr;
     
+    int frames;
+    long startTime;
+    long passedTime;
+    
     
     GraphicsWindow(Settings* settings, string title) : settings(settings), title(title){
         if(initWindow()){

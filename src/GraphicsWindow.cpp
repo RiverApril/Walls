@@ -33,7 +33,6 @@ bool GraphicsWindow::initWindow(){
     
     glewExperimental = GL_TRUE;
     glewInit();
-    glfwSwapInterval(1);
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
@@ -78,6 +77,11 @@ bool GraphicsWindow::initWindow(){
     
     glClearColor(0.0, 0.0, 0.0, 1.0);
     
+    frames = 0;
+    startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    passedTime = 0;
+    
+    
     return true;
     
 }
@@ -89,6 +93,16 @@ void GraphicsWindow::makeProjectionMatrix(){
 void GraphicsWindow::startLoop(){
     while(running && !glfwWindowShouldClose(window)){
         tick++;
+        
+        //FPS
+        frames ++;
+        passedTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        if(passedTime > startTime + 1000){
+            glfwSetWindowTitle(window, ("FPS: "+to_string(frames)).c_str());
+            startTime = passedTime;
+            frames = 0;
+        }
+        //
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         

@@ -22,8 +22,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 using namespace glm;
 
 #define removeFromVector(vec, ele) vec.erase(std::remove(vec.begin(), vec.end(), ele), vec.end());
