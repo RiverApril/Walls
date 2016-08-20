@@ -19,7 +19,7 @@ ActorPlayer::ActorPlayer(Scene* scene){
     activeScene = scene;
     activeScene->pointLights.push_back(&light);
     
-    box.radii = vec3(0.25, 0.5, 0.25);
+    box.radii = vec3(0.125, 0.5, 0.125);
     
 }
 
@@ -58,11 +58,13 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     vec3 diff;
     
-    float jumpSpeed = 0.2;
-    float moveSpeed = 0.001;
+    const float jumpSpeed = 0.1;
+    const float moveSpeed = onGround ? 0.02 : 0.001;
+    const float gravity = 0.005;
+    const float groundInvFriction = 0.5;
+    const float airInvFriction = 0.99;
     
     if(onGround){
-        moveSpeed = 0.05;
         if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
             diff.y += jumpSpeed;
         }
@@ -92,18 +94,24 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     
     if(!tryToMove(velocity)){
-        float maxDiff = 0.1;
+        float maxDiff = moveSpeed;
         vec3 xdiff = vec3(clamp(velocity.x, -maxDiff, maxDiff), 0, 0);
         vec3 ydiff = vec3(0, clamp(velocity.y, -maxDiff, maxDiff), 0);
         vec3 zdiff = vec3(0, 0, clamp(velocity.z, -maxDiff, maxDiff));
         for(float i = 0; i < abs(velocity.x); i+=maxDiff){
-            tryToMove(xdiff);
+            if(!tryToMove(xdiff)){
+                break;
+            }
         }
         for(float i = 0; i < abs(velocity.y); i+=maxDiff){
-            tryToMove(ydiff);
+            if(!tryToMove(ydiff)){
+                break;
+            }
         }
         for(float i = 0; i < abs(velocity.z); i+=maxDiff){
-            tryToMove(zdiff);
+            if(!tryToMove(zdiff)){
+                break;
+            }
         }
     }
     
@@ -121,12 +129,12 @@ void ActorPlayer::render(GraphicsWindow* gw){
     }
     
     if(onGround){
-        velocity.x *= 0.5;
-        velocity.z *= 0.5;
+        velocity.x *= groundInvFriction;
+        velocity.z *= groundInvFriction;
     }else{
-        velocity.x *= 0.99;
-        velocity.z *= 0.99;
-        velocity.y -= 0.01;
+        velocity.x *= airInvFriction;
+        velocity.z *= airInvFriction;
+        velocity.y -= gravity;
     }
     
     gw->cameraPosition = box.center;

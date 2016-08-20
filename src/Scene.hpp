@@ -28,7 +28,7 @@ public:
     
     void render(GraphicsWindow* gw);
     
-    RayData rayProps(vec3 origin, vec3 look);
+    RayData rayProps(vec3 origin, vec3 look, float far = INFINITY);
     
     
 };

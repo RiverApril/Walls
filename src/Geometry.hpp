@@ -10,6 +10,7 @@
 #define Geometry_hpp
 
 #include "Headers.hpp"
+#include "Ray.hpp"
 
 struct Point2{
     int x, y;
@@ -34,7 +35,10 @@ struct AABB{
     
     bool intersects(AABB& other);
     
-    bool intersects(vec3 origin, vec3 look, vec3& hit, float& dist);
+    bool intersects(vec3 origin, vec3 look, vec3& hit, float& dist, Side& side);
 };
+
+float roundTo(float v, float m);
+vec3 roundTo(vec3 v, float m);
 
 #endif /* Geometry_hpp */

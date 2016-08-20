@@ -40,17 +40,20 @@ void Scene::render(GraphicsWindow *gw){
     
 }
 
-RayData Scene::rayProps(vec3 origin, vec3 look){
+RayData Scene::rayProps(vec3 origin, vec3 look, float far){
     RayData data;
-    float close = INFINITY;
+    data.hit = false;
+    float close = far;
     for(Prop* p : props){
         vec3 hit;
         float dist;
-        if(p->box.intersects(origin, look, hit, dist)){
+        Side side;
+        if(p->box.intersects(origin, look, hit, dist, side)){
             if(dist < close){
                 data.hit = true;
                 data.position = hit;
                 data.prop = p;
+                data.side = side;
                 close = dist;
             }
         }

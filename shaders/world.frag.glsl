@@ -16,28 +16,38 @@ in vec3 transferNormal;
 uniform PointLight pointLights[16];
 uniform int pointLightCount;
 
+uniform bool overrideColor;
+uniform vec4 colorOverride;
+
 out vec4 fragColor;
 
 void main() {
     
-    vec3 lightColor = vec3(0);
+    if(overrideColor){
+        
+        fragColor = colorOverride;
+        
+    }else{
     
-    vec3 normal = normalize(normalMatrix * transferNormal);
-    
-    vec3 position = vec3(modelMatrix * vec4(transferPosition, 1));
-    
-    for(int i=0;i<pointLightCount;i++){
+        vec3 lightColor = vec3(0);
         
-        vec3 surfaceToLight = pointLights[i].position - position;
+        vec3 normal = normalize(normalMatrix * transferNormal);
         
-        float dist = distance(pointLights[i].position, position);
+        vec3 position = vec3(modelMatrix * vec4(transferPosition, 1));
         
-        float a = 0; float b = 1.0 / pointLights[i].intensity;
-        float att = 1.0 / (1.0 + a*dist + b*dist*dist);
+        for(int i=0;i<pointLightCount;i++){
+            
+            vec3 surfaceToLight = pointLights[i].position - position;
+            
+            float dist = distance(pointLights[i].position, position);
+            
+            float a = 0; float b = 1.0 / pointLights[i].intensity;
+            float att = 1.0 / (1.0 + a*dist + b*dist*dist);
+            
+            lightColor += clamp(pointLights[i].color * (att * dot(normal, surfaceToLight) / (length(surfaceToLight) * length(normal))), vec3(0, 0, 0), vec3(1, 1, 1));
+            
+        }
         
-        lightColor += clamp(pointLights[i].color * (att * dot(normal, surfaceToLight) / (length(surfaceToLight) * length(normal))), vec3(0, 0, 0), vec3(1, 1, 1));
-        
+        fragColor = vec4(lightColor * transferColor.rgb, transferColor.a);
     }
-    
-    fragColor = vec4(lightColor * transferColor.rgb, transferColor.a);
 }

@@ -9,7 +9,17 @@
 #ifndef Ray_hpp
 #define Ray_hpp
 
-#include "Prop.hpp"
+#include "Headers.hpp"
+
+class Prop;
+
+enum Side{
+    xm, xp, ym, yp, zm, zp
+};
+
+vec3 sideNormal(Side side);
+vec3 sideMask(Side side);
+vec3 sideInvMask(Side side);
 
 struct RayData{
     
@@ -18,6 +28,7 @@ struct RayData{
     vec3 position;
     bool hit;
     Prop* prop;
+    Side side;
     
 };
 

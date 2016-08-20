@@ -33,6 +33,7 @@ bool GraphicsWindow::initWindow(){
     
     glewExperimental = GL_TRUE;
     glewInit();
+    glfwSwapInterval(1);
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
@@ -40,13 +41,14 @@ bool GraphicsWindow::initWindow(){
     printf("OpenGL version supported: %s\n", version);
     
     glfwSetKeyCallback(window, keyCallback);
+    glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     worldShader.addShader(Shader("shaders/world.vert.glsl", GL_VERTEX_SHADER));
     worldShader.addShader(Shader("shaders/world.frag.glsl", GL_FRAGMENT_SHADER));
     worldShader.link();
     
-    matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
+    makeProjectionMatrix();
     
     Models::initModels();
     
@@ -60,20 +62,28 @@ bool GraphicsWindow::initWindow(){
     
     player->box.center.y = 10;
     
-    activeScene->props.push_back(new Prop(vec3(20, .5, 20), vec3(0, 0, 0)));
-    activeScene->props.push_back(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
-    activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
-    activeScene->props.push_back(new Prop(Models::monkey, vec3(1, 1, 0)));
+    activeScene->props.push_back(new Prop(vec3(10, .5, 10), vec3(0, -.25, 0)));
+    //activeScene->props.push_back(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
+    //activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
+    //activeScene->props.push_back(new Prop(Models::monkey, vec3(1, 1, 0)));
     //
+    
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     
     return true;
     
+}
+
+void GraphicsWindow::makeProjectionMatrix(){
+    matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.1f, 1000);
 }
 
 void GraphicsWindow::startLoop(){
@@ -107,6 +117,65 @@ void GraphicsWindow::startLoop(){
         //Render scene
         activeScene->render(this);
         
+        float yaw = cameraRotation.y;
+        float pitch = cameraRotation.x;
+        
+        /*
+         
+        mine:
+        (pitch, yaw ) -> (x,  y,  z)
+        (0    ,  0  ) -> (0,  0, -1)
+        (pi/2 ,  0  ) -> (0, -1,  0)
+        (0    , pi/2) -> (1,  0,  0)
+
+        should be:
+        (pitch, yaw)  -> (x, y, z)
+        (0,     0)    -> (1, 0, 0)
+        (pi/2,  0)    -> (0, 1, 0)
+        (0,    -pi/2) -> (0, 0, 1)
+
+        original formula:
+        x = cos(yaw) * cos(pitch)
+        y = sin(pitch)
+        z = sin(-yaw) * cos(pitch)
+
+        So I swapped the x and z, and negated y and z
+
+        */
+        cameraLook = normalize(vec3(sin(yaw)*cos(pitch), -sin(pitch), -cos(yaw)*cos(pitch)));
+        
+        if(propToPlace){
+            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
+            rayHit = ray.hit;
+            if(ray.hit){
+                vec3 newPos = ray.prop->box.center + ((ray.prop->box.radii + propToPlace->box.radii) * sideNormal(ray.side));
+                newPos = (ray.position * sideInvMask(ray.side)) + (newPos * sideMask(ray.side));
+                newPos = roundTo(newPos, 4);
+                propToPlace->box.center = newPos;
+                
+                bool collision = false;
+                for(Prop* prop : activeScene->props){
+                    if(prop->box.intersects(propToPlace->box)){
+                        collision = true;
+                        break;
+                    }
+                }
+                
+                //glDisable(GL_DEPTH_TEST);
+                glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
+                if(collision){
+                    glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 0, 0, .5);
+                }else{
+                    glUniform4f(worldShader.getUniformLocation("colorOverride"), 0, 1, 0, .5);
+                }
+                propToPlace->render(this);
+                glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
+                //glEnable(GL_DEPTH_TEST);
+                
+            }
+            
+        }
+        
         
         
         glfwPollEvents();
@@ -128,44 +197,18 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
         }
     }
     if(action == GLFW_PRESS){
-        float yaw = cameraRotation.y;
-        float pitch = cameraRotation.x;
-        
-        /* 
-         
-         //mine:
-         (pitch, yaw ) -> (x,  y,  z)
-         (0    ,  0  ) -> (0,  0, -1)
-         (pi/2 ,  0  ) -> (0, -1,  0)
-         (0    , pi/2) -> (1,  0,  0)
-         
-         //should be:
-         (pitch, yaw)  -> (x, y, z)
-         (0,     0)    -> (1, 0, 0)
-         (pi/2,  0)    -> (0, 1, 0)
-         (0,    -pi/2) -> (0, 0, 1)
-         
-         //original formula:
-         x = cos(yaw) * cos(pitch)
-         y = sin(pitch)
-         z = sin(-yaw) * cos(pitch)
-         
-         So I swapped the x and z, and negated y and z
-         
-        */
-        vec3 cameraLook = normalize(vec3(sin(yaw)*cos(pitch),
-                                         -sin(pitch),
-                                         -cos(yaw)*cos(pitch)));
         if(key == GLFW_KEY_1){
-            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
-            if(ray.hit){
-                activeScene->props.push_back(new Prop(vec3(.5, .5, .5), ray.position));
+            if(propToPlace){
+                delete propToPlace;
+                propToPlace = nullptr;
+            }
+            propToPlace = new Prop(vec3(.25, .25, .25), vec3(0, 0, 0));
+        }else if(key == GLFW_KEY_2){
+            if(propToPlace && rayHit){
+                activeScene->props.push_back(propToPlace);
+                propToPlace = nullptr;
             }
         }
-        /*if(key == GLFW_KEY_2){
-            activeScene->props.push_back(new Prop(vec3(.01, .01, .01), cameraPosition+cameraLook));
-            printf("Pitch: %0.2f, Yaw: %0.2f\n", yaw, pitch);
-        }*/
     }
 }
 
@@ -173,11 +216,20 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if(window == graphicsWindowInstance->window){
         graphicsWindowInstance->keyEvent(key, scancode, action, mods);
     }else{
-        printf("Another window?");
+        printf("Another window?\n");
     }
     
 }
 
+void resizeCallback(GLFWwindow* window, int width, int height){
+    if(window == graphicsWindowInstance->window){
+        graphicsWindowInstance->settings->windowSize.x = width;
+        graphicsWindowInstance->settings->windowSize.y = height;
+        graphicsWindowInstance->makeProjectionMatrix();
+    }else{
+        printf("Another window?\n");
+    }
+}
 
 
 

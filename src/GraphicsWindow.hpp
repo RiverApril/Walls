@@ -37,6 +37,9 @@ public:
     
     vec3 cameraPosition;
     vec3 cameraRotation;
+    vec3 cameraLook;
+    
+    bool rayHit = false;
     
     dvec2 mousePos;
     dvec2 mousePosPrev;
@@ -48,6 +51,8 @@ public:
     
     long tick = 0;
     
+    Prop* propToPlace = nullptr;
+    
     
     GraphicsWindow(Settings* settings, string title) : settings(settings), title(title){
         if(initWindow()){
@@ -57,6 +62,7 @@ public:
     
     bool initWindow();
     void startLoop();
+    void makeProjectionMatrix();
     
     void keyEvent(int key, int scancode, int action, int mods);
     
@@ -65,5 +71,6 @@ public:
 extern GraphicsWindow* graphicsWindowInstance;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void resizeCallback(GLFWwindow* window, int width, int height);
 
 #endif /* GraphicsWindow_hpp */
