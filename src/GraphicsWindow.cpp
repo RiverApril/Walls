@@ -231,7 +231,13 @@ void GraphicsWindow::startLoop(){
         //Gui
         
         consoleSprite->pos = vec2(-settings->windowSize.x/2, -settings->windowSize.y/2);
-        consoleSprite->text = "FPS: "+to_string(fps);
+        consoleSprite->text = format("FPS %d", fps);
+        if(debugActive){
+            consoleSprite->text += format("\nPos %0.2f %0.2f %0.2f", player->box.center.x, player->box.center.y, player->box.center.z);
+            consoleSprite->text += format("\nCam %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            consoleSprite->text += format("\nLook %s %s %s", cameraLook.x>0?"x+":"x-", cameraLook.y>0?"y+":"y-", cameraLook.z>0?"z+":"z-");
+            consoleSprite->text += format("\nYaw %0.2f  Pitch %0.2f", degrees(cameraRotation.y), degrees(cameraRotation.x));
+        }
         if(consoleActive){
             consoleSprite->text += "\n\n";
             for(int i=0;i<consoleOutput.size();i++){
@@ -283,10 +289,12 @@ void GraphicsWindow::proccessCommand(string command){
 
 void GraphicsWindow::consoleAdd(string add){
     consoleOutput.push_back(add);
-    if(consoleOutput.size() > (settings->windowSize.y / 8)-6){
+    if(consoleOutput.size() > (settings->windowSize.y / 10)-10){
         consoleOutput.erase(consoleOutput.begin());
     }
 }
+
+
 
 void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
     
@@ -342,6 +350,8 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                     removeFromVector(activeScene->props, selectedProp);
                     selectedProp = nullptr;
                 }
+            }else if(key == GLFW_KEY_F1){
+                debugActive = !debugActive;
             }
         }
     }

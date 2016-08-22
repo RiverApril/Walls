@@ -25,6 +25,7 @@
 #include <chrono>
 #include <png.h>
 #include <queue>
+#include <cstdarg>
 
 using namespace std;
 using namespace std::chrono;
@@ -33,5 +34,8 @@ using namespace glm;
 #define removeFromVector(vec, ele) vec.erase(std::remove(vec.begin(), vec.end(), ele), vec.end());
 
 #define clamp(v, low, high) (v<low?low:(v>high?high:v))
+
+std::string format (const char *fmt, ...);
+std::string vformat (const char *fmt, va_list ap);
 
 #endif /* Headers_hpp */

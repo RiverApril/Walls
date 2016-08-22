@@ -71,6 +71,8 @@ public:
     bool consoleActive = false;
     int consoleLines = 0;
     
+    bool debugActive = false;
+    
     
     GraphicsWindow(Settings* settings, string title) : settings(settings), title(title){
         if(initWindow()){

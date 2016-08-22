@@ -47,7 +47,7 @@ void Gui::compile(){
         for(int i=0;i<text->text.size();i++){
             
             if(text->text[i] == '\n'){
-                pos.y += 8;
+                pos.y += 10;
                 pos.x = text->pos.x;
                 continue;
             }
