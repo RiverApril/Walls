@@ -64,31 +64,30 @@ void ActorPlayer::render(GraphicsWindow* gw){
     const float groundInvFriction = 0.5;
     const float airInvFriction = 0.99;
     
-    if(onGround){
-        if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
-            diff.y += jumpSpeed;
+    if(!gw->consoleActive){
+        if(onGround){
+            if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
+                diff.y += jumpSpeed;
+            }
+        }
+        
+        if(glfwGetKey(gw->window, GLFW_KEY_W) == GLFW_PRESS){
+            diff.z -= cos(lookRotation.y) * moveSpeed;
+            diff.x += sin(lookRotation.y) * moveSpeed;
+        }
+        if(glfwGetKey(gw->window, GLFW_KEY_S) == GLFW_PRESS){
+            diff.z -= cos(lookRotation.y) * -moveSpeed;
+            diff.x += sin(lookRotation.y) * -moveSpeed;
+        }
+        if(glfwGetKey(gw->window, GLFW_KEY_A) == GLFW_PRESS){
+            diff.z -= cos(lookRotation.y-radians(90.0f)) * moveSpeed;
+            diff.x += sin(lookRotation.y-radians(90.0f)) * moveSpeed;
+        }
+        if(glfwGetKey(gw->window, GLFW_KEY_D) == GLFW_PRESS){
+            diff.z -= cos(lookRotation.y-radians(90.0f)) * -moveSpeed;
+            diff.x += sin(lookRotation.y-radians(90.0f)) * -moveSpeed;
         }
     }
-    
-    if(glfwGetKey(gw->window, GLFW_KEY_W) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y) * moveSpeed;
-        diff.x += sin(lookRotation.y) * moveSpeed;
-    }
-    if(glfwGetKey(gw->window, GLFW_KEY_S) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y) * -moveSpeed;
-        diff.x += sin(lookRotation.y) * -moveSpeed;
-    }
-    if(glfwGetKey(gw->window, GLFW_KEY_A) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y-radians(90.0f)) * moveSpeed;
-        diff.x += sin(lookRotation.y-radians(90.0f)) * moveSpeed;
-    }
-    if(glfwGetKey(gw->window, GLFW_KEY_D) == GLFW_PRESS){
-        diff.z -= cos(lookRotation.y-radians(90.0f)) * -moveSpeed;
-        diff.x += sin(lookRotation.y-radians(90.0f)) * -moveSpeed;
-    }
-    //if(glfwGetKey(gw->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-    //    diff.y -= 0.1;
-    //}
     
     velocity += diff;
     

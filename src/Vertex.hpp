@@ -32,4 +32,23 @@ struct Vertex{
 bool operator==(const Vertex& a, const Vertex& b);
 bool operator!=(const Vertex& a, const Vertex& b);
 
+struct GuiVertex{
+    
+    GuiVertex(){}
+    
+    GuiVertex(vec3 Position, vec4 Color, vec2 UV) : Position(Position), Color(Color), UV(UV){}
+    
+    vec3 Position;
+    vec4 Color;
+    vec2 UV;
+    
+    const static int strideToPosition = 0;
+    const static int strideToColor    = sizeof(float) * (3);
+    const static int strideToUV       = sizeof(float) * (3+4);
+    const static int strideToEnd      = sizeof(float) * (3+4+2);
+};
+
+bool operator==(const GuiVertex& a, const GuiVertex& b);
+bool operator!=(const GuiVertex& a, const GuiVertex& b);
+
 #endif /* Vertex_hpp */

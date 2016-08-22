@@ -23,6 +23,8 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <png.h>
+#include <queue>
 
 using namespace std;
 using namespace std::chrono;

@@ -44,7 +44,8 @@ void main() {
             float a = 0; float b = 1.0 / pointLights[i].intensity;
             float att = 1.0 / (1.0 + a*dist + b*dist*dist);
             
-            lightColor += clamp(pointLights[i].color * (att * dot(normal, surfaceToLight) / (length(surfaceToLight) * length(normal))), vec3(0, 0, 0), vec3(1, 1, 1));
+            lightColor += clamp(pointLights[i].color * (att * dot(normal, surfaceToLight) / (length(surfaceToLight) * length(normal))),
+                                vec3(0, 0, 0), vec3(1, 1, 1));
             
         }
         

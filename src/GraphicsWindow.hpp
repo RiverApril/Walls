@@ -15,6 +15,7 @@
 #include "Model.hpp"
 #include "Scene.hpp"
 #include "ActorPlayer.hpp"
+#include "Gui.hpp"
 
 class GraphicsWindow{
 public:
@@ -27,6 +28,7 @@ public:
     
     GLFWwindow* window;
     ShaderProgram worldShader;
+    ShaderProgram guiShader;
     
     
     mat4 matrixProjection;
@@ -34,6 +36,8 @@ public:
     
     mat4 matrixView;
     mat3 normalMatrix;
+    
+    mat4 matrixGui;
     
     vec3 cameraPosition;
     vec3 cameraRotation;
@@ -54,9 +58,18 @@ public:
     
     Prop* propToPlace = nullptr;
     
+    Gui* gui;
+    TextSprite* consoleSprite;
+    
     int frames;
     long startTime;
     long passedTime;
+    int fps = 0;
+    
+    vector<string> consoleOutput;
+    string consoleInput = "";
+    bool consoleActive = false;
+    int consoleLines = 0;
     
     
     GraphicsWindow(Settings* settings, string title) : settings(settings), title(title){
@@ -68,14 +81,20 @@ public:
     bool initWindow();
     void startLoop();
     void makeProjectionMatrix();
+    void proccessCommand(string command);
+    void consoleAdd(string add);
     
     void keyEvent(int key, int scancode, int action, int mods);
+    void mouseButtonEvent(int button, int action, int mods);
+    void charEvent(int codepoint);
     
 };
 
 extern GraphicsWindow* graphicsWindowInstance;
 
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void charCallback(GLFWwindow* window, unsigned int codepoint);
 void resizeCallback(GLFWwindow* window, int width, int height);
 
 #endif /* GraphicsWindow_hpp */

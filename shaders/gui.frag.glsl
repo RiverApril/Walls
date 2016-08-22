@@ -2,12 +2,14 @@
 
 in vec3 transferPosition;
 in vec4 transferColor;
-in vec3 transferUV;
-in vec3 transferNormal;
+in vec2 transferUV;
+
+uniform sampler2D activeTexture;
 
 out vec4 fragColor;
 
 void main() {
 
-    fragColor = transferColor;
+    fragColor = transferColor * texture(activeTexture, transferUV);
+    
 }
