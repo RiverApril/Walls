@@ -3,12 +3,14 @@
 layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec4 vertexColor;
 layout(location = 2) in vec3 vertexNormal;
+layout(location = 3) in vec2 vertexUV;
 
 uniform mat4 viewMatrix;
 
 out vec3 transferPosition;
 out vec4 transferColor;
 out vec3 transferNormal;
+out vec2 transferUV;
 
 
 void main() {
@@ -16,5 +18,7 @@ void main() {
 	
 	transferPosition = vertexPosition;
     transferColor = vertexColor;
-	transferNormal = vertexNormal;
+    transferNormal = vertexNormal;
+    transferUV.x = vertexUV.x;
+    transferUV.y = 1.0f - vertexUV.y;
 }

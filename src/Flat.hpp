@@ -1,13 +1,13 @@
 //
-//  Gui.hpp
+//  Flat.hpp
 //  Walls
 //
 //  Created by Braeden Atlee on 8/21/16.
 //  Copyright © 2016 Braeden Atlee. All rights reserved.
 //
 
-#ifndef Gui_hpp
-#define Gui_hpp
+#ifndef Flat_hpp
+#define Flat_hpp
 
 #include "Headers.hpp"
 #include "Vertex.hpp"
@@ -24,13 +24,14 @@ struct TextSprite{
     vec2 pos = vec2(0, 0);
     string text = "";
     float z = 0;
+    bool center = false;
     vec4 color = vec4(1, 1, 1, 1);
 };
 
-class Gui{
+class Flat{
     
 public:
-    vector<GuiVertex> vertices;
+    vector<FlatVertex> vertices;
     vector<unsigned int> indices;
     
     GLsizei elementCount;
@@ -49,4 +50,4 @@ public:
     
 };
 
-#endif /* Gui_hpp */
+#endif /* Flat_hpp */

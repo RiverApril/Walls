@@ -9,17 +9,17 @@
 #include "Vertex.hpp"
 
 bool operator!=(const Vertex& a, const Vertex& b){
-    return (a.Position != b.Position) || (a.Color != b.Color) || (a.Normal != b.Normal);
+    return (a.Position != b.Position) || (a.Color != b.Color) || (a.Normal != b.Normal) || (a.UV != b.UV);
 }
 
 bool operator==(const Vertex& a, const Vertex& b){
     return !(a!=b);
 }
 
-bool operator!=(const GuiVertex& a, const GuiVertex& b){
+bool operator!=(const FlatVertex& a, const FlatVertex& b){
     return (a.Position != b.Position) || (a.Color != b.Color) || (a.UV != b.UV);
 }
 
-bool operator==(const GuiVertex& a, const GuiVertex& b){
+bool operator==(const FlatVertex& a, const FlatVertex& b){
     return !(a!=b);
 }

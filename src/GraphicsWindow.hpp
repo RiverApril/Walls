@@ -15,7 +15,8 @@
 #include "Model.hpp"
 #include "Scene.hpp"
 #include "ActorPlayer.hpp"
-#include "Gui.hpp"
+#include "Flat.hpp"
+#include "Hologram.hpp"
 
 class GraphicsWindow{
 public:
@@ -28,7 +29,7 @@ public:
     
     GLFWwindow* window;
     ShaderProgram worldShader;
-    ShaderProgram guiShader;
+    ShaderProgram flatShader;
     
     
     mat4 matrixProjection;
@@ -37,7 +38,7 @@ public:
     mat4 matrixView;
     mat3 normalMatrix;
     
-    mat4 matrixGui;
+    mat4 matrixHud;
     
     vec3 cameraPosition;
     vec3 cameraRotation;
@@ -58,8 +59,10 @@ public:
     
     Prop* propToPlace = nullptr;
     
-    Gui* gui;
+    Flat* hud;
     TextSprite* consoleSprite;
+    
+    Hologram* testHologram;
     
     int frames;
     long startTime;

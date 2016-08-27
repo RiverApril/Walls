@@ -24,8 +24,8 @@ void Model::make(){
     if (ifs) {
         
         vector<vec3> vertexList;
-        vector<vec3> textureCoordList;
         vector<vec3> normalList;
+        vector<vec2> textureCoordList;
         
         string line;
         
@@ -45,7 +45,7 @@ void Model::make(){
                 float x, y;
                 iss >> x >> y;
                 
-                textureCoordList.push_back(vec3(x, y, 0));
+                textureCoordList.push_back(vec2(x, y));
                 
             } else if (f == "vn") { //normals
                 
@@ -74,13 +74,13 @@ void Model::make(){
                         int v, n;
                         fss >> v >> n;
                         
-                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1),/* textureCoordList[t],*/ normalList[n-1]);
+                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1), normalList[n-1], vec2(0, 0));
                         
                     }else{
                         int v, t, n;
                         fss >> v >> t >> n;
                         
-                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1),/* textureCoordList[t],*/ normalList[n-1]);
+                        vert = Vertex(vertexList[v-1], vec4(1, 1, 1, 1), normalList[n-1], textureCoordList[t-1]);
                     }
                     
                     std::vector<Vertex>::iterator vi = find(vertices.begin(), vertices.end(), vert);
@@ -111,10 +111,12 @@ namespace Models{
     
     Model* monkey;
     Model* cube;
+    Model* pedistal;
     
     void initModels(){
         monkey = new Model("models/monkey.obj");
         cube = new Model("models/cube.obj");
+        pedistal = new Model("models/pedistal.obj");
     }
     
 }

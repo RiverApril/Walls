@@ -101,6 +101,9 @@ void Mesh::render(){
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
     
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToUV);
+    
     glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0);
 }
 

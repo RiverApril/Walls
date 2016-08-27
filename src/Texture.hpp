@@ -13,9 +13,10 @@
 
 class Texture{
 public:
-    Texture(string filename);
+    Texture(string filename, int index);
     
     GLuint pointer;
+    int index;
     int width;
     int height;
     
@@ -24,7 +25,8 @@ public:
 };
 
 namespace Textures{
-    extern Texture* gui;
+    extern Texture* flat;
+    extern Texture* prop;
     
     void initTextures();
 }

@@ -50,9 +50,9 @@ bool GraphicsWindow::initWindow(){
     worldShader.addShader(Shader("shaders/world.frag.glsl", GL_FRAGMENT_SHADER));
     worldShader.link();
     
-    guiShader.addShader(Shader("shaders/gui.vert.glsl", GL_VERTEX_SHADER));
-    guiShader.addShader(Shader("shaders/gui.frag.glsl", GL_FRAGMENT_SHADER));
-    guiShader.link();
+    flatShader.addShader(Shader("shaders/flat.vert.glsl", GL_VERTEX_SHADER));
+    flatShader.addShader(Shader("shaders/flat.frag.glsl", GL_FRAGMENT_SHADER));
+    flatShader.link();
     
     makeProjectionMatrix();
     
@@ -69,25 +69,44 @@ bool GraphicsWindow::initWindow(){
     
     player->box.center.y = 10;
     
-    activeScene->props.push_back(new Prop(vec3(10, .5, 10), vec3(0, -.25, 0)));
+    activeScene->props.push_back(new Prop(vec3(10, .5, 10), vec3(0, -.5, 0)));
     //activeScene->props.push_back(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
     //activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
     //activeScene->props.push_back(new Prop(Models::monkey, vec3(1, 1, 0)));
     //
     
-    gui = new Gui();
+    //setup hud
+    hud = new Flat();
     
     Sprite* redical = new Sprite();
     redical->center = vec2(0, 0);
     redical->radii = vec2(4, 4);
     redical->UV = vec4(0, 1.0f/32*6, 1.0f/32, 1.0f/32*7);
     redical->color = vec4(1, 1, 1, 1);
-    gui->sprites.push_back(redical);
+    hud->sprites.push_back(redical);
     
     consoleSprite = new TextSprite();
-    gui->textSprites.push_back(consoleSprite);
+    hud->textSprites.push_back(consoleSprite);
     
-    gui->compile();
+    hud->compile();
+    //
+    
+    //setup hologram
+    testHologram = new Hologram();
+    testHologram->pos = vec3(0, 1.0f, 0);
+    
+    Flat* holoFlat = new Flat();
+    testHologram->flat = holoFlat;
+    testHologram->lockOnPlayer = true;
+    
+    TextSprite* holoWord = new TextSprite();
+    holoWord->text = "Hologram\nNew Line\n\nSpace";
+    holoWord->center = true;
+    
+    holoFlat->textSprites.push_back(holoWord);
+    
+    holoFlat->compile();
+    //
     
     
     glEnable(GL_DEPTH_TEST);
@@ -104,14 +123,20 @@ bool GraphicsWindow::initWindow(){
     passedTime = 0;
     
     
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, Textures::prop->pointer);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, Textures::flat->pointer);
+    
     return true;
     
 }
 
 void GraphicsWindow::makeProjectionMatrix(){
     matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
-    matrixGui = mat4();
-    matrixGui = scale(matrixGui, vec3(2.0f/settings->windowSize.x, -2.0f/settings->windowSize.y, 1.0f));
+    matrixHud = mat4();
+    matrixHud = scale(matrixHud, vec3(2.0f/settings->windowSize.x, -2.0f/settings->windowSize.y, 1.0f));
 }
 
 void GraphicsWindow::startLoop(){
@@ -123,7 +148,6 @@ void GraphicsWindow::startLoop(){
         passedTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         if(passedTime > startTime + 1000){
             fps = frames;
-            glfwSetWindowTitle(window, ("FPS: "+to_string(frames)).c_str());
             startTime = passedTime;
             frames = 0;
         }
@@ -142,7 +166,6 @@ void GraphicsWindow::startLoop(){
         //
         
         
-        glCullFace(GL_BACK);
         //start using world shader
         worldShader.use();
         
@@ -186,9 +209,9 @@ void GraphicsWindow::startLoop(){
         
         okayToPlace = false;
         selectedProp = nullptr;
-        if(propToPlace){
-            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
-            if(ray.hit){
+        RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
+        if(ray.hit){
+            if(propToPlace){
                 okayToPlace = true;
                 vec3 newPos = ray.prop->box.center + ((ray.prop->box.radii + propToPlace->box.radii) * sideNormal(ray.side));
                 newPos = (ray.position * sideInvMask(ray.side)) + (newPos * sideMask(ray.side));
@@ -213,28 +236,17 @@ void GraphicsWindow::startLoop(){
                 propToPlace->render(this);
                 glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
                 
-            }
-            
-        }else{
-            RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
-            if(ray.hit){
-                glDisable(GL_DEPTH_TEST);
-                glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
-                glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 1, 0, .5);
-                ray.prop->render(this);
-                glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
-                glEnable(GL_DEPTH_TEST);
+            }else{
                 selectedProp = ray.prop;
             }
         }
         
-        //Gui
-        
+        //Flat
         consoleSprite->pos = vec2(-settings->windowSize.x/2, -settings->windowSize.y/2);
         consoleSprite->text = format("FPS %d", fps);
         if(debugActive){
             consoleSprite->text += format("\nPos %0.2f %0.2f %0.2f", player->box.center.x, player->box.center.y, player->box.center.z);
-            consoleSprite->text += format("\nCam %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            consoleSprite->text += format("\nEye %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
             consoleSprite->text += format("\nLook %s %s %s", cameraLook.x>0?"x+":"x-", cameraLook.y>0?"y+":"y-", cameraLook.z>0?"z+":"z-");
             consoleSprite->text += format("\nYaw %0.2f  Pitch %0.2f", degrees(cameraRotation.y), degrees(cameraRotation.x));
         }
@@ -247,14 +259,15 @@ void GraphicsWindow::startLoop(){
             consoleSprite->text += consoleInput;
             consoleSprite->text += tick%60>=30?"_":" ";
         }
-        gui->compile();
+        hud->compile();
         
-        glCullFace(GL_FRONT);
-        guiShader.use();
-        glUniform1i(guiShader.getUniformLocation("activeTexture"), 0);
-        glUniformMatrix4fv(guiShader.getUniformLocation("viewMatrix"), 1, false, &matrixGui[0][0]);
-        gui->render();
+        flatShader.use();
+        glUniform1i(flatShader.getUniformLocation("activeTexture"), 1);
+        glUniformMatrix4fv(flatShader.getUniformLocation("viewMatrix"), 1, false, &matrixHud[0][0]);
+        hud->render();
         //
+        
+        testHologram->render(this);
         
         glfwPollEvents();
         glfwSwapBuffers(window);

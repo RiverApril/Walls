@@ -15,7 +15,7 @@
 
 ActorPlayer::ActorPlayer(Scene* scene){
     light.color = vec3(1.0, 1.0, 1.0);
-    light.intensity = 24;
+    light.intensity = 48;
     activeScene = scene;
     activeScene->pointLights.push_back(&light);
     
@@ -49,11 +49,17 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     lookRotation.y += gw->mousePosDelta.x * gw->settings->lookSpeed;
     lookRotation.x += gw->mousePosDelta.y * gw->settings->lookSpeed;
-    if(lookRotation.x > radians(89.0f)){
-        lookRotation.x = radians(89.0f);
+    if(lookRotation.x > radians(89.9f)){
+        lookRotation.x = radians(89.9f);
     }
-    if(lookRotation.x < -radians(89.0f)){
-        lookRotation.x = -radians(89.0f);
+    if(lookRotation.x < -radians(89.9f)){
+        lookRotation.x = -radians(89.9f);
+    }
+    if(lookRotation.y > two_pi<float>()){
+        lookRotation.y -= two_pi<float>();
+    }
+    if(lookRotation.y < 0){
+        lookRotation.y += two_pi<float>();
     }
     
     vec3 diff;
@@ -80,12 +86,12 @@ void ActorPlayer::render(GraphicsWindow* gw){
             diff.x += sin(lookRotation.y) * -moveSpeed;
         }
         if(glfwGetKey(gw->window, GLFW_KEY_A) == GLFW_PRESS){
-            diff.z -= cos(lookRotation.y-radians(90.0f)) * moveSpeed;
-            diff.x += sin(lookRotation.y-radians(90.0f)) * moveSpeed;
+            diff.z -= cos(lookRotation.y-half_pi<float>()) * moveSpeed;
+            diff.x += sin(lookRotation.y-half_pi<float>()) * moveSpeed;
         }
         if(glfwGetKey(gw->window, GLFW_KEY_D) == GLFW_PRESS){
-            diff.z -= cos(lookRotation.y-radians(90.0f)) * -moveSpeed;
-            diff.x += sin(lookRotation.y-radians(90.0f)) * -moveSpeed;
+            diff.z -= cos(lookRotation.y+half_pi<float>()) * moveSpeed;
+            diff.x += sin(lookRotation.y+half_pi<float>()) * moveSpeed;
         }
     }
     

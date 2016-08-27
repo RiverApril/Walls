@@ -9,10 +9,12 @@
 #include "Scene.hpp"
 #include "GraphicsWindow.hpp"
 #include "Ray.hpp"
+#include "Texture.hpp"
 
 
 void Scene::render(GraphicsWindow *gw){
     
+    glUniform1i(gw->worldShader.getUniformLocation("activeTexture"), 0);
     
     //set lights
     

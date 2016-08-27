@@ -9,16 +9,19 @@
 #include "Texture.hpp"
 
 
-Texture::Texture(string filename){
+Texture::Texture(string filename, int index){
     pointer = png_texture_load(filename.c_str(), &width, &height);
+    this->index = index;
 }
 
 namespace Textures{
     
-    Texture* gui;
+    Texture* flat;
+    Texture* prop;
     
     void initTextures(){
-        gui = new Texture("textures/gui.png");
+        flat = new Texture("textures/flat.png", 0);
+        prop = new Texture("textures/prop.png", 1);
     }
     
 }

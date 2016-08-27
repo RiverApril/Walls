@@ -12,12 +12,15 @@ uniform mat3 normalMatrix;
 in vec3 transferPosition;
 in vec4 transferColor;
 in vec3 transferNormal;
+in vec2 transferUV;
 
 uniform PointLight pointLights[16];
 uniform int pointLightCount;
 
 uniform bool overrideColor;
 uniform vec4 colorOverride;
+
+uniform sampler2D activeTexture;
 
 out vec4 fragColor;
 
@@ -49,6 +52,6 @@ void main() {
             
         }
         
-        fragColor = vec4(lightColor * transferColor.rgb, transferColor.a);
+        fragColor = texture(activeTexture, transferUV) * vec4(lightColor * transferColor.rgb, transferColor.a);
     }
 }

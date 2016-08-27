@@ -37,7 +37,9 @@ public:
         mustScale = true;
     }
     
-    void render(GraphicsWindow* gw);
+    virtual ~Prop(){}
+    
+    virtual void render(GraphicsWindow* gw);
     
     
 };

@@ -16,27 +16,29 @@ struct Vertex{
     
     Vertex(){}
     
-    Vertex(vec3 Position, vec4 Color, vec3 Normal) : Position(Position), Color(Color), Normal(Normal){}
+    Vertex(vec3 Position, vec4 Color, vec3 Normal, vec2 UV) : Position(Position), Color(Color), Normal(Normal), UV(UV){}
     
     vec3 Position;
     vec4 Color;
     vec3 Normal;
+    vec2 UV;
     
     const static int strideToPosition = 0;
     const static int strideToColor    = sizeof(float) * (3);
     const static int strideToNormal   = sizeof(float) * (3+4);
-    const static int strideToEnd      = sizeof(float) * (3+4+3);
+    const static int strideToUV       = sizeof(float) * (3+4+3);
+    const static int strideToEnd      = sizeof(float) * (3+4+3+2);
     
 };
 
 bool operator==(const Vertex& a, const Vertex& b);
 bool operator!=(const Vertex& a, const Vertex& b);
 
-struct GuiVertex{
+struct FlatVertex{
     
-    GuiVertex(){}
+    FlatVertex(){}
     
-    GuiVertex(vec3 Position, vec4 Color, vec2 UV) : Position(Position), Color(Color), UV(UV){}
+    FlatVertex(vec3 Position, vec4 Color, vec2 UV) : Position(Position), Color(Color), UV(UV){}
     
     vec3 Position;
     vec4 Color;
@@ -48,7 +50,7 @@ struct GuiVertex{
     const static int strideToEnd      = sizeof(float) * (3+4+2);
 };
 
-bool operator==(const GuiVertex& a, const GuiVertex& b);
-bool operator!=(const GuiVertex& a, const GuiVertex& b);
+bool operator==(const FlatVertex& a, const FlatVertex& b);
+bool operator!=(const FlatVertex& a, const FlatVertex& b);
 
 #endif /* Vertex_hpp */
