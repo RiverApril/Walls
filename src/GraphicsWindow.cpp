@@ -134,7 +134,7 @@ bool GraphicsWindow::initWindow(){
 }
 
 void GraphicsWindow::makeProjectionMatrix(){
-    matrixProjection = perspectiveFov<float>(radians(80.0f), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
+    matrixProjection = perspectiveFov<float>(radians(settings->fov), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
     matrixHud = mat4();
     matrixHud = scale(matrixHud, vec3(2.0f/settings->windowSize.x, -2.0f/settings->windowSize.y, 1.0f));
 }
@@ -209,12 +209,12 @@ void GraphicsWindow::startLoop(){
         
         okayToPlace = false;
         selectedProp = nullptr;
-        RayData ray = activeScene->rayProps(cameraPosition, cameraLook);
-        if(ray.hit){
+        lookRay = activeScene->rayProps(cameraPosition, cameraLook);
+        if(lookRay.hit){
             if(propToPlace){
                 okayToPlace = true;
-                vec3 newPos = ray.prop->box.center + ((ray.prop->box.radii + propToPlace->box.radii) * sideNormal(ray.side));
-                newPos = (ray.position * sideInvMask(ray.side)) + (newPos * sideMask(ray.side));
+                vec3 newPos = lookRay.prop->box.center + ((lookRay.prop->box.radii + propToPlace->box.radii) * sideNormal(lookRay.side));
+                newPos = (lookRay.position * sideInvMask(lookRay.side)) + (newPos * sideMask(lookRay.side));
                 newPos = roundTo(newPos, 8);
                 propToPlace->box.center = newPos;
                 
@@ -237,7 +237,7 @@ void GraphicsWindow::startLoop(){
                 glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
                 
             }else{
-                selectedProp = ray.prop;
+                selectedProp = lookRay.prop;
             }
         }
         
@@ -353,6 +353,14 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                     propToPlace = nullptr;
                 }
                 propToPlace = new Prop(vec3(.125, .125, .125), vec3(0, 0, 0));
+            }else if(key == GLFW_KEY_4){
+                if(lookRay.hit){
+                    PointLight* lamp = new PointLight();
+                    lamp->position = lookRay.position;
+                    lamp->color = vec3(0.0, 0.0, 1.0);
+                    lamp->intensity = 8;
+                    activeScene->pointLights.push_back(lamp);
+                }
             }else if(key == GLFW_KEY_ENTER){
                 if(propToPlace && okayToPlace){
                     activeScene->props.push_back(propToPlace);

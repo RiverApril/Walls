@@ -15,7 +15,7 @@
 
 ActorPlayer::ActorPlayer(Scene* scene){
     light.color = vec3(1.0, 1.0, 1.0);
-    light.intensity = 48;
+    light.intensity = 16;
     activeScene = scene;
     activeScene->pointLights.push_back(&light);
     

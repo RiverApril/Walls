@@ -18,6 +18,7 @@ struct Settings{
     
     Point2 windowSize = Point2(640, 480);
     double lookSpeed = 0.01;
+    double fov = 90;
     
     void init();
     bool load();

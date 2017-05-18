@@ -46,6 +46,7 @@ public:
     
     bool okayToPlace = false;
     Prop* selectedProp = nullptr;
+    RayData lookRay;
     
     dvec2 mousePos;
     dvec2 mousePosPrev;
