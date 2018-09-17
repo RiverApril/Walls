@@ -13,8 +13,8 @@
 
 struct PointLight{
     vec3 position = vec3(0, 0, 0);
-    vec3 color = vec3(1, 1, 1);
-    float intensity = 10;
+    vec3 specular = vec3(1, 1, 1);
+    vec3 attenuation = vec3(1, 0.25, 0.1);
 };
 
 #endif /* PointLight_hpp */

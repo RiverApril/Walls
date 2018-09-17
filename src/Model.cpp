@@ -111,12 +111,12 @@ namespace Models{
     
     Model* monkey;
     Model* cube;
-    Model* pedistal;
+    Model* sphere;
     
     void initModels(){
         monkey = new Model("models/monkey.obj");
         cube = new Model("models/cube.obj");
-        pedistal = new Model("models/pedistal.obj");
+        sphere = new Model("models/sphere.obj");
     }
     
 }

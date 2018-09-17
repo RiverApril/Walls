@@ -32,7 +32,7 @@ bool Shader::compile(){
         glGetShaderInfoLog(pointer, len, NULL, infolog);
         log = string(infolog);
     }else{
-        log = "Compile Successful";
+        log = "Compile Successful\n";
     }
     return status;
 }

@@ -23,8 +23,8 @@ void Scene::render(GraphicsWindow *gw){
     for(int i=0;i<count;i++){
         string l = "pointLights["+to_string(i)+"]";
         glUniform3f(gw->worldShader.getUniformLocation(l+".position"), pointLights[i]->position.x, pointLights[i]->position.y, pointLights[i]->position.z);
-        glUniform3f(gw->worldShader.getUniformLocation(l+".color"), pointLights[i]->color.r, pointLights[i]->color.g, pointLights[i]->color.b);
-        glUniform1f(gw->worldShader.getUniformLocation(l+".intensity"), pointLights[i]->intensity);
+        glUniform3f(gw->worldShader.getUniformLocation(l+".specular"), pointLights[i]->specular.r, pointLights[i]->specular.g, pointLights[i]->specular.b);
+        glUniform3f(gw->worldShader.getUniformLocation(l+".attenuation"), pointLights[i]->attenuation.x, pointLights[i]->attenuation.y, pointLights[i]->attenuation.z);
     }
     //
     

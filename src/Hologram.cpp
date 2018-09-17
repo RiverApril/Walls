@@ -12,7 +12,7 @@
 
 void Hologram::render(GraphicsWindow *gw){
     
-    matrix = mat4();
+    matrix = identity<mat4>();
     matrix = translate(matrix, pos);
     if(lockOnPlayer){
         matrix = rotate(matrix, -gw->player->lookRotation.y, vec3(0, 1.0f, 0));

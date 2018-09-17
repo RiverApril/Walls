@@ -75,8 +75,8 @@ void Mesh::compile(){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * elementCount, &indices[0], GL_STATIC_DRAW);
     
-    vertices.clear();
-    indices.clear();
+    //vertices.clear();
+    //indices.clear();
     
     //To Fix glEnableVertexAttribArray() returning error:
     GLuint vaoId = 0;
@@ -91,17 +91,14 @@ void Mesh::render(){
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     
-    
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToPosition);
-    
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToColor);
-    
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
-    
     glEnableVertexAttribArray(3);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToPosition);
+    glVertexAttribPointer(1, 4, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToColor);
+    glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
     glVertexAttribPointer(3, 2, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToUV);
     
     glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0);

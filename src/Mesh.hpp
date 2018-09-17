@@ -37,7 +37,7 @@ struct Mesh{
     
     thread makeThread;
     
-    vec3 radii;
+    vec3 radii = vec3(0, 0, 0);
     
     Mesh();
     virtual ~Mesh(){}

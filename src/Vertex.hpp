@@ -18,10 +18,10 @@ struct Vertex{
     
     Vertex(vec3 Position, vec4 Color, vec3 Normal, vec2 UV) : Position(Position), Color(Color), Normal(Normal), UV(UV){}
     
-    vec3 Position;
-    vec4 Color;
-    vec3 Normal;
-    vec2 UV;
+    vec3 Position = vec3(0, 0, 0);
+    vec4 Color = vec4(0, 0, 0, 0);
+    vec3 Normal = vec3(0, 0, 0);
+    vec2 UV = vec2(0, 0);
     
     const static int strideToPosition = 0;
     const static int strideToColor    = sizeof(float) * (3);
@@ -40,9 +40,9 @@ struct FlatVertex{
     
     FlatVertex(vec3 Position, vec4 Color, vec2 UV) : Position(Position), Color(Color), UV(UV){}
     
-    vec3 Position;
-    vec4 Color;
-    vec2 UV;
+    vec3 Position = vec3(0, 0, 0);
+    vec4 Color = vec4(0, 0, 0, 0);
+    vec2 UV = vec2(0, 0);
     
     const static int strideToPosition = 0;
     const static int strideToColor    = sizeof(float) * (3);

@@ -26,7 +26,7 @@ struct Model : public Mesh{
 namespace Models{
     extern Model* monkey;
     extern Model* cube;
-    extern Model* pedistal;
+    extern Model* sphere;
     
     void initModels();
 }

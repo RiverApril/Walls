@@ -18,9 +18,9 @@ class Actor{
 public:
     AABB box;
     
-    vec3 lookRotation;
+    vec3 lookRotation = vec3(0, 0, 0);
     
-    Actor(){}
+    Actor(){};
     virtual ~Actor(){}
     
     virtual void render(GraphicsWindow* gw){}

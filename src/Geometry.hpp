@@ -30,8 +30,8 @@ Point2 operator*(const Point2& a, const int b);
 Point2 operator/(const Point2& a, const int b);
 
 struct AABB{
-    vec3 center;
-    vec3 radii;
+    vec3 center = vec3(0, 0, 0);
+    vec3 radii = vec3(0, 0, 0);
     
     bool intersects(AABB& other);
     

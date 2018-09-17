@@ -32,17 +32,17 @@ public:
     ShaderProgram flatShader;
     
     
-    mat4 matrixProjection;
-    mat4 matrixCamera;
+    mat4 matrixProjection = identity<mat4>();
+    mat4 matrixCamera = identity<mat4>();
     
-    mat4 matrixView;
-    mat3 normalMatrix;
+    mat4 matrixView = identity<mat4>();
+    mat3 normalMatrix = identity<mat3>();
     
-    mat4 matrixHud;
+    mat4 matrixHud = identity<mat4>();
     
-    vec3 cameraPosition;
-    vec3 cameraRotation;
-    vec3 cameraLook;
+    vec3 cameraPosition = vec3(0, 0, 0);
+    vec3 cameraRotation = vec3(0, 0, 0);
+    vec3 cameraLook = vec3(0, 0, 0);
     
     bool okayToPlace = false;
     Prop* selectedProp = nullptr;

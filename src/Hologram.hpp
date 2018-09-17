@@ -18,8 +18,8 @@ class Hologram{
     
 public:
     bool lockOnPlayer = true;
-    vec3 rot;
-    vec3 pos;
+    vec3 rot = vec3(0, 0, 0);
+    vec3 pos = vec3(0, 0, 0);
     mat4 matrix;
     
     Flat* flat;

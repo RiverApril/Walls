@@ -19,10 +19,10 @@ bool GraphicsWindow::initWindow(){
         return false;
     }
     
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     window = glfwCreateWindow(settings->windowSize.x, settings->windowSize.y, title.c_str(), NULL, NULL);
     
@@ -32,13 +32,20 @@ bool GraphicsWindow::initWindow(){
     }
     glfwMakeContextCurrent(window);
     
-    glewExperimental = GL_TRUE;
-    glewInit();
+    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+    
+    //glewExperimental = GL_TRUE;
+    //if(glewInit() != GLEW_OK){
+    //    fprintf(stderr, "ERROR: Failed to start GLEW\n");
+    //    return false;
+    //}
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
     printf("Renderer: %s\n", renderer);
     printf("OpenGL version supported: %s\n", version);
+    printf("GLFW Version: %s\n", glfwGetVersionString());
+    printf("\n");
     
     glfwSetKeyCallback(window, keyCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -58,7 +65,7 @@ bool GraphicsWindow::initWindow(){
     
     Models::initModels();
     Textures::initTextures();
-    
+    Materials::initMaterials();
     
     //Setup Scene
     
@@ -116,7 +123,7 @@ bool GraphicsWindow::initWindow(){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.0, 0.0, 1.0, 1.0);
     
     frames = 0;
     startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -129,13 +136,18 @@ bool GraphicsWindow::initWindow(){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, Textures::flat->pointer);
     
+    GLenum error = glGetError();
+    if(error != 0){
+        printf("Uh oh, we've got a GL error somewhere: 0x%X\n", error);
+    }
+    
     return true;
     
 }
 
 void GraphicsWindow::makeProjectionMatrix(){
     matrixProjection = perspectiveFov<float>(radians(settings->fov), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
-    matrixHud = mat4();
+    matrixHud = identity<mat4>();
     matrixHud = scale(matrixHud, vec3(2.0f/settings->windowSize.x, -2.0f/settings->windowSize.y, 1.0f));
 }
 
@@ -170,7 +182,7 @@ void GraphicsWindow::startLoop(){
         worldShader.use();
         
         //set camera
-        matrixCamera = mat4();
+        matrixCamera = identity<mat4>();
         matrixCamera = rotate<float>(matrixCamera, cameraRotation.z, vec3(0, 0, 1.0f));
         matrixCamera = rotate<float>(matrixCamera, cameraRotation.x, vec3(1.0f, 0, 0));
         matrixCamera = rotate<float>(matrixCamera, cameraRotation.y, vec3(0, 1.0f, 0));
@@ -178,33 +190,36 @@ void GraphicsWindow::startLoop(){
         //
         
         //Render scene
+        
+        glUniform3f(worldShader.getUniformLocation("eye"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+        
         activeScene->render(this);
         
         float yaw = cameraRotation.y;
         float pitch = cameraRotation.x;
         
-        /*
+        
          
-        mine:
-        (pitch, yaw ) -> (x,  y,  z)
-        (0    ,  0  ) -> (0,  0, -1)
-        (pi/2 ,  0  ) -> (0, -1,  0)
-        (0    , pi/2) -> (1,  0,  0)
+//        mine:
+//        (pitch, yaw ) -> (x,  y,  z)
+//        (0    ,  0  ) -> (0,  0, -1)
+//        (pi/2 ,  0  ) -> (0, -1,  0)
+//        (0    , pi/2) -> (1,  0,  0)
+//
+//        should be:
+//        (pitch, yaw)  -> (x, y, z)
+//        (0,     0)    -> (1, 0, 0)
+//        (pi/2,  0)    -> (0, 1, 0)
+//        (0,    -pi/2) -> (0, 0, 1)
+//
+//        original formula:
+//        x = cos(yaw) * cos(pitch)
+//        y = sin(pitch)
+//        z = sin(-yaw) * cos(pitch)
+//
+//        So I swapped the x and z, and negated y and z
 
-        should be:
-        (pitch, yaw)  -> (x, y, z)
-        (0,     0)    -> (1, 0, 0)
-        (pi/2,  0)    -> (0, 1, 0)
-        (0,    -pi/2) -> (0, 0, 1)
-
-        original formula:
-        x = cos(yaw) * cos(pitch)
-        y = sin(pitch)
-        z = sin(-yaw) * cos(pitch)
-
-        So I swapped the x and z, and negated y and z
-
-        */
+        
         cameraLook = normalize(vec3(sin(yaw)*cos(pitch), -sin(pitch), -cos(yaw)*cos(pitch)));
         
         okayToPlace = false;
@@ -269,11 +284,11 @@ void GraphicsWindow::startLoop(){
         
         testHologram->render(this);
         
-        glfwPollEvents();
         glfwSwapBuffers(window);
+        glfwPollEvents();
         
         GLenum error = glGetError();
-        if(error != 0){
+        if(error != GL_NO_ERROR){
             printf("Uh oh, we've got a GL error somewhere: 0x%X\n", error);
         }
     }
@@ -357,17 +372,26 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                 if(lookRay.hit){
                     PointLight* lamp = new PointLight();
                     lamp->position = lookRay.position;
-                    lamp->color = vec3(0.0, 0.0, 1.0);
-                    lamp->intensity = 8;
+                    lamp->specular = vec3(1.0, 1.0, 1.0);
+                    lamp->attenuation = vec3(0, 1, 0);
                     activeScene->pointLights.push_back(lamp);
                 }
+            }else if(key == GLFW_KEY_5){
+                if(propToPlace){
+                    delete propToPlace;
+                    propToPlace = nullptr;
+                }
+                propToPlace = new Prop(Models::sphere, Materials::defaultMaterial, vec3(0, 0, 0));
             }else if(key == GLFW_KEY_ENTER){
                 if(propToPlace && okayToPlace){
                     activeScene->props.push_back(propToPlace);
                     propToPlace = nullptr;
                 }
             }else if(key == GLFW_KEY_BACKSPACE){
-                if(selectedProp){
+                if(propToPlace){
+                    delete propToPlace;
+                    propToPlace = nullptr;
+                }else if(selectedProp){
                     removeFromVector(activeScene->props, selectedProp);
                     selectedProp = nullptr;
                 }
@@ -380,9 +404,11 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
 
 void GraphicsWindow::mouseButtonEvent(int button, int action, int mods){
     if(button == GLFW_MOUSE_BUTTON_1){
+        //printf("Place?\n");
         if(propToPlace && okayToPlace){
             activeScene->props.push_back(propToPlace);
             propToPlace = nullptr;
+            //printf("Placed\n");
         }
     }
 }

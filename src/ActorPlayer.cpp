@@ -14,17 +14,14 @@
 
 
 ActorPlayer::ActorPlayer(Scene* scene){
-    light.color = vec3(1.0, 1.0, 1.0);
-    light.intensity = 16;
     activeScene = scene;
-    activeScene->pointLights.push_back(&light);
-    
+    velocity = vec3(0.0, 0.0, 0.0);
     box.radii = vec3(0.125, 0.5, 0.125);
-    
+    box.center = vec3(0.0, 0.0, 0.0);
 }
 
 ActorPlayer::~ActorPlayer(){
-    removeFromVector(activeScene->pointLights, &light);
+    
 }
 
 bool ActorPlayer::tryToMove(vec3 diff){
@@ -46,6 +43,7 @@ bool ActorPlayer::tryToMove(vec3 diff){
 }
 
 void ActorPlayer::render(GraphicsWindow* gw){
+    //printf("A Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
     
     lookRotation.y += gw->mousePosDelta.x * gw->settings->lookSpeed;
     lookRotation.x += gw->mousePosDelta.y * gw->settings->lookSpeed;
@@ -62,13 +60,15 @@ void ActorPlayer::render(GraphicsWindow* gw){
         lookRotation.y += two_pi<float>();
     }
     
-    vec3 diff;
+    vec3 diff = vec3(0.0, 0.0, 0.0);
     
     const float jumpSpeed = 0.1;
     const float moveSpeed = onGround ? 0.02 : 0.001;
     const float gravity = 0.005;
     const float groundInvFriction = 0.5;
     const float airInvFriction = 0.99;
+    
+    //printf("B Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
     
     if(!gw->consoleActive){
         if(onGround){
@@ -95,8 +95,12 @@ void ActorPlayer::render(GraphicsWindow* gw){
         }
     }
     
+    
+    //printf("C Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
+    
     velocity += diff;
     
+    //printf("D Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
     
     if(!tryToMove(velocity)){
         float maxDiff = 0.125;
@@ -122,6 +126,8 @@ void ActorPlayer::render(GraphicsWindow* gw){
             }
         }
     }
+    
+    //printf("E Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
     
     onGround = false;
     
@@ -151,5 +157,6 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     gw->cameraPosition = box.center+vec3(0, box.radii.y, 0);
     gw->cameraRotation = lookRotation;
-    light.position = gw->cameraPosition;
+    
+    //printf("F Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
 }

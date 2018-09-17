@@ -19,10 +19,9 @@ class ActorPlayer : public Actor{
     
 public:
     
-    vec3 velocity;
+    vec3 velocity = vec3(0, 0, 0);
     bool onGround = false;
     
-    PointLight light;
     Scene* activeScene;
     
     ActorPlayer(Scene* scene);
