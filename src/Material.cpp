@@ -2,8 +2,8 @@
 //  Material.cpp
 //  Walls
 //
-//  Created by Braeden Atlee on 5/20/17.
-//  Copyright © 2017 Braeden Atlee. All rights reserved.
+//  Created by Emily Atlee on 5/20/17.
+//  Copyright © 2017 Emily Atlee. All rights reserved.
 //
 
 #include "Material.hpp"
