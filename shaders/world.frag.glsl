@@ -1,4 +1,8 @@
-#version 330
+#version 410
+
+#define MAX_LIGHT_COUNT 32
+#define NORMAL_BIAS 0.01
+#define CEL_QTY 8
 
 struct Material{
     vec3 diffuse;
@@ -13,9 +17,6 @@ struct PointLight{
     vec3 attenuation; //quad, linear, const
 };
 
-uniform mat4 modelMatrix;
-uniform mat3 normalMatrix;
-
 in vec3 transferPosition;
 in vec4 transferColor;
 in vec3 transferNormal;
@@ -25,22 +26,31 @@ uniform vec3 eye;
 
 uniform Material material;
 
-uniform PointLight pointLights[16];
+uniform PointLight pointLights[MAX_LIGHT_COUNT];
 uniform int pointLightCount;
+uniform int pointLightFarPlane;
 
 uniform bool overrideColor;
 uniform vec4 colorOverride;
 
 uniform sampler2D activeTexture;
+uniform samplerCubeArrayShadow depthMap;
 
 out vec4 fragColor;
 
 float celShade(float c){
-    return c;
+    return floor(c * CEL_QTY) / CEL_QTY;
 }
 
 vec3 celShade(vec3 c){
-    return c;
+    return vec3(celShade(c.r), celShade(c.g), celShade(c.b));
+}
+
+vec3 calculateShadow(vec3 surfaceToLight, int lightIndex) {
+    float currentDepth = length(surfaceToLight) / pointLightFarPlane;
+    float shadow = texture(depthMap, vec4(surfaceToLight, lightIndex), currentDepth);
+
+    return vec3(shadow, shadow, shadow);
 }
 
 void main() {
@@ -53,11 +63,11 @@ void main() {
         
         vec3 lightColor = vec3(0);
         
-        vec3 normal = normalize(normalMatrix * transferNormal);
+        vec3 normal = transferNormal;
         
-        vec3 position = vec3(modelMatrix * vec4(transferPosition, 1));
+        vec3 position = transferPosition;
         
-        for(int i=0;i<pointLightCount;i++){
+        for(int i = 0; i < pointLightCount; i++){
             
             vec3 surfaceToLight = pointLights[i].position - position;
             
@@ -71,20 +81,24 @@ void main() {
                 float b = pointLights[i].attenuation.y;
                 float c = pointLights[i].attenuation.z;
                 float att = 1.0 / (a*dist*dist + b*dist + c);
-                
-                lightColor += att * (material.diffuse * NdotL);
+
+                vec3 shadow = calculateShadow(position - pointLights[i].position + normal * NORMAL_BIAS, i);
+
+                vec3 thisLightColor = att * (material.diffuse * NdotL);
                 
                 vec3 V = eye - position;
                 vec3 H = normalize(surfaceToLight + V);
                 
                 float NdotH = max(dot(normal, H), 0.0);
                 
-                lightColor += pointLights[i].specular * att * material.specular * pow(NdotH, material.shininess);
+                thisLightColor += pointLights[i].specular * att * material.specular * pow(NdotH, material.shininess);
+
+                lightColor += (vec3(1.0) - shadow) * thisLightColor;
             }
         
         }
         
-        lightColor = celShade(lightColor);
+        // lightColor = celShade(lightColor);
         
         lightColor = max(lightColor, material.ambient);
         

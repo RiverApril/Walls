@@ -11,7 +11,6 @@
 
 GraphicsWindow* graphicsWindowInstance;
 
-
 bool GraphicsWindow::initWindow(){
     
     if(!glfwInit()){
@@ -39,6 +38,7 @@ bool GraphicsWindow::initWindow(){
        fprintf(stderr, "ERROR: Failed to start GLEW\n");
        return false;
     }
+    CHECK_ERROR
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
@@ -61,7 +61,14 @@ bool GraphicsWindow::initWindow(){
     flatShader.addShader(Shader("shaders/flat.frag.glsl", GL_FRAGMENT_SHADER));
     flatShader.link();
     
+    shadowShader.addShader(Shader("shaders/shadow.vert.glsl", GL_VERTEX_SHADER));
+    shadowShader.addShader(Shader("shaders/shadow.geom.glsl", GL_GEOMETRY_SHADER));
+    shadowShader.addShader(Shader("shaders/shadow.frag.glsl", GL_FRAGMENT_SHADER));
+    shadowShader.link();
+    
     makeProjectionMatrix();
+    makeShadowBuffers();
+    CHECK_ERROR
     
     Models::initModels();
     Textures::initTextures();
@@ -72,14 +79,31 @@ bool GraphicsWindow::initWindow(){
     activeScene = new Scene();
     
     player = new ActorPlayer(activeScene);
-    activeScene->actors.push_back(player);
+    activeScene->addActor(player);
     
     player->box.center.y = 10;
     
-    activeScene->props.push_back(new Prop(vec3(10, .5, 10), vec3(0, -.5, 0)));
-    //activeScene->props.push_back(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
-    //activeScene->props.push_back(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
-    //activeScene->props.push_back(new Prop(Models::monkey, vec3(1, 1, 0)));
+    activeScene->addProp(new Prop(vec3(10, .5, 10), vec3(0, -0.5, 0)));
+    // activeScene->addProp(new Prop(vec3(10, .5, 10), vec3(0, -15, 0)));
+    // activeScene->addProp(new Prop(vec3(10, .5, 10), vec3(0, 15, 0)));
+    // activeScene->addProp(new Prop(vec3(.5, 10, 10), vec3(-15, 0, 0)));
+    // activeScene->addProp(new Prop(vec3(.5, 10, 10), vec3(15, 0, 0)));
+    // activeScene->addProp(new Prop(vec3(10, 10, .5), vec3(0, 0, -15)));
+    // activeScene->addProp(new Prop(vec3(10, 10, .5), vec3(0, 0, 15)));
+
+    // activeScene->addProp(new Prop(vec3(1, 1, 1), vec3(1, 0, 3)));
+    // activeScene->addProp(new Prop(vec3(.5, .5, .5), vec3(0, 5, 1)));
+    // activeScene->addProp(new Prop(vec3(0.25, 0.25, 0.25), vec3(3, 1, 0)));
+
+    // PointLight* lamp = new PointLight();
+    // activeScene->addProp(new Prop(vec3(.1, .1, .1), vec3(0, 1, 0)));
+    // lamp->position = vec3(0, 1, 0);
+    // lamp->specular = vec3(1.0, 1.0, 1.0);
+    // lamp->attenuation = vec3(0, 1, 0);
+    // activeScene->addPointLight(lamp);
+    activeScene->addProp(new Prop(vec3(.25, .25, .25), vec3(0, 1, 0)));
+    activeScene->addProp(new Prop(vec3(.5, .5, .5), vec3(0, 1, 1)));
+    activeScene->addProp(new Prop(Models::monkey, Materials::defaultMaterial, vec3(1, 1, 0)));
     //
     
     //setup hud
@@ -130,15 +154,10 @@ bool GraphicsWindow::initWindow(){
     passedTime = 0;
     
     
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, Textures::prop->pointer);
-    
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, Textures::flat->pointer);
-    
     GLenum error = glGetError();
     if(error != 0){
         printf("Uh oh, we've got a GL error somewhere: 0x%X\n", error);
+        return false;
     }
     
     return true;
@@ -149,6 +168,44 @@ void GraphicsWindow::makeProjectionMatrix(){
     matrixProjection = perspectiveFov<float>(radians(settings->fov), settings->windowSize.x, settings->windowSize.y, 0.001f, 1000);
     matrixHud = identity<mat4>();
     matrixHud = scale(matrixHud, vec3(2.0f/settings->windowSize.x, -2.0f/settings->windowSize.y, 1.0f));
+}
+
+void GraphicsWindow::makeShadowBuffers(){
+
+    glGenTextures(1, &depthCubemap);
+    CHECK_ERROR
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, depthCubemap);
+    CHECK_ERROR
+    glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_DEPTH_COMPONENT24, settings->shadowResolution, settings->shadowResolution, 6 * LIGHT_COUNT_MAX);
+    // for (unsigned int i = 0; i < 6 * LIGHT_COUNT_MAX; i ++) {
+    //     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + (i % 6), 0, GL_DEPTH_COMPONENT,
+    //         settings->shadowResolution, settings->shadowResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    // }
+    CHECK_ERROR
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_GREATER);
+    CHECK_ERROR
+
+    glGenFramebuffers(1, &depthMapFBO);
+    CHECK_ERROR
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    CHECK_ERROR
+    for(int i = 0; i < LIGHT_COUNT_MAX; i++){
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+        CHECK_ERROR
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if(status != 36053){
+            printf("Initial Shadow Frambuffer %d status: %d\n", i, status);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void GraphicsWindow::startLoop(){
@@ -164,42 +221,85 @@ void GraphicsWindow::startLoop(){
             frames = 0;
         }
         //
-        
+
+        renderShadows();
+
+        // render scene with shadow mapping
+        glViewport(0, 0, settings->windowSize.x*2, settings->windowSize.y*2);
+        CHECK_ERROR
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        //user input
-        mousePosPrev = mousePos;
-        glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
-        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
-            mousePosDelta = mousePos - mousePosPrev;
-        }else{
-            mousePosDelta = dvec2();
-        }
+        CHECK_ERROR
+        renderScene();
+        CHECK_ERROR
         //
+
+        renderHud();
+        CHECK_ERROR
         
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+        CHECK_ERROR
+    }
+}
+
+void GraphicsWindow::renderShadows(){
+    activeScene->renderShadows(this);
+}
+
+void GraphicsWindow::renderScene(){
+    
+    //user input
+    mousePosPrev = mousePos;
+    glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
+        mousePosDelta = mousePos - mousePosPrev;
+    }else{
+        mousePosDelta = dvec2();
+    }
+    //
+    
+    //start using world shader
+    worldShader.use();
+    CHECK_ERROR
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, Textures::prop->pointer);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, Textures::flat->pointer);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, depthCubemap);
+
+    CHECK_ERROR
+    
+    //set camera
+    matrixCamera = identity<mat4>();
+    matrixCamera = rotate<float>(matrixCamera, cameraRotation.z, vec3(0, 0, 1.0f));
+    matrixCamera = rotate<float>(matrixCamera, cameraRotation.x, vec3(1.0f, 0, 0));
+    matrixCamera = rotate<float>(matrixCamera, cameraRotation.y, vec3(0, 1.0f, 0));
+    matrixCamera = translate(matrixCamera, -cameraPosition);
+
+    glUniformMatrix4fv(worldShader.getUniformLocation("viewMatrix"), 1, false, &matrixCamera[0][0]);
+    glUniformMatrix4fv(worldShader.getUniformLocation("projectionMatrix"), 1, false, &matrixProjection[0][0]);
+    //
+    
+    //Render scene
+    CHECK_ERROR
+    glUniform3f(worldShader.getUniformLocation("eye"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    CHECK_ERROR
+
+    glUniform1i(worldShader.getUniformLocation("depthMap"), 2);
+
+    activeScene->render(this);
+    CHECK_ERROR
+    
+    float yaw = cameraRotation.y;
+    float pitch = cameraRotation.x;
+    
+    
         
-        //start using world shader
-        worldShader.use();
-        
-        //set camera
-        matrixCamera = identity<mat4>();
-        matrixCamera = rotate<float>(matrixCamera, cameraRotation.z, vec3(0, 0, 1.0f));
-        matrixCamera = rotate<float>(matrixCamera, cameraRotation.x, vec3(1.0f, 0, 0));
-        matrixCamera = rotate<float>(matrixCamera, cameraRotation.y, vec3(0, 1.0f, 0));
-        matrixCamera = translate(matrixCamera, -cameraPosition);
-        //
-        
-        //Render scene
-        
-        glUniform3f(worldShader.getUniformLocation("eye"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-        
-        activeScene->render(this);
-        
-        float yaw = cameraRotation.y;
-        float pitch = cameraRotation.x;
-        
-        
-         
 //        mine:
 //        (pitch, yaw ) -> (x,  y,  z)
 //        (0    ,  0  ) -> (0,  0, -1)
@@ -219,79 +319,74 @@ void GraphicsWindow::startLoop(){
 //
 //        So I swapped the x and z, and negated y and z
 
-        
-        cameraLook = normalize(vec3(sin(yaw)*cos(pitch), -sin(pitch), -cos(yaw)*cos(pitch)));
-        
-        okayToPlace = false;
-        selectedProp = nullptr;
-        lookRay = activeScene->rayProps(cameraPosition, cameraLook);
-        if(lookRay.hit){
-            if(propToPlace){
-                okayToPlace = true;
-                vec3 newPos = lookRay.prop->box.center + ((lookRay.prop->box.radii + propToPlace->box.radii) * sideNormal(lookRay.side));
-                newPos = (lookRay.position * sideInvMask(lookRay.side)) + (newPos * sideMask(lookRay.side));
-                newPos = roundTo(newPos, 8);
-                propToPlace->box.center = newPos;
-                
-                bool collision = false;
-                for(Prop* prop : activeScene->props){
-                    if(prop->box.intersects(propToPlace->box)){
-                        collision = true;
-                        break;
-                    }
+    
+    cameraLook = normalize(vec3(sin(yaw)*cos(pitch), -sin(pitch), -cos(yaw)*cos(pitch)));
+    
+    okayToPlace = false;
+    selectedProp = nullptr;
+    lookRay = activeScene->rayProps(cameraPosition, cameraLook);
+    if(lookRay.hit){
+        if(propToPlace){
+            okayToPlace = true;
+            vec3 newPos = lookRay.prop->box.center + ((lookRay.prop->box.radii + propToPlace->box.radii) * sideNormal(lookRay.side));
+            newPos = (lookRay.position * sideInvMask(lookRay.side)) + (newPos * sideMask(lookRay.side));
+            newPos = roundTo(newPos, 8);
+            propToPlace->box.center = newPos;
+            
+            bool collision = false;
+            auto props = activeScene->getProps();
+            for(Prop* prop : props){
+                if(prop->box.intersects(propToPlace->box)){
+                    collision = true;
+                    break;
                 }
-                
-                glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
-                if(collision){
-                    okayToPlace = false;
-                    glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 0, 0, .5);
-                }else{
-                    glUniform4f(worldShader.getUniformLocation("colorOverride"), 0, 1, 0, .5);
-                }
-                propToPlace->render(this);
-                glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
-                
+            }
+            
+            glUniform1i(worldShader.getUniformLocation("overrideColor"), 1);
+            if(collision){
+                okayToPlace = false;
+                glUniform4f(worldShader.getUniformLocation("colorOverride"), 1, 0, 0, .5);
             }else{
-                selectedProp = lookRay.prop;
+                glUniform4f(worldShader.getUniformLocation("colorOverride"), 0, 1, 0, .5);
             }
-        }
-        
-        //Flat
-        consoleSprite->pos = vec2(-settings->windowSize.x/2, -settings->windowSize.y/2);
-        consoleSprite->text = format("FPS %d", fps);
-        if(debugActive){
-            consoleSprite->text += format("\nPos %0.2f %0.2f %0.2f", player->box.center.x, player->box.center.y, player->box.center.z);
-            consoleSprite->text += format("\nEye %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
-            consoleSprite->text += format("\nLook %s %s %s", cameraLook.x>0?"x+":"x-", cameraLook.y>0?"y+":"y-", cameraLook.z>0?"z+":"z-");
-            consoleSprite->text += format("\nYaw %0.2f  Pitch %0.2f", degrees(cameraRotation.y), degrees(cameraRotation.x));
-        }
-        if(consoleActive){
-            consoleSprite->text += "\n\n";
-            for(int i=0;i<consoleOutput.size();i++){
-                consoleSprite->text += consoleOutput[i] + "\n";
-            }
-            consoleSprite->text += "\n>";
-            consoleSprite->text += consoleInput;
-            consoleSprite->text += tick%60>=30?"_":" ";
-        }
-        hud->compile();
-        
-        flatShader.use();
-        glUniform1i(flatShader.getUniformLocation("activeTexture"), 1);
-        glUniformMatrix4fv(flatShader.getUniformLocation("viewMatrix"), 1, false, &matrixHud[0][0]);
-        hud->render();
-        //
-        
-        testHologram->render(this);
-        
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        
-        GLenum error = glGetError();
-        if(error != GL_NO_ERROR){
-            printf("Uh oh, we've got a GL error somewhere: 0x%X\n", error);
+            propToPlace->render(this);
+            glUniform1i(worldShader.getUniformLocation("overrideColor"), 0);
+            
+        }else{
+            selectedProp = lookRay.prop;
         }
     }
+    CHECK_ERROR
+}
+
+void GraphicsWindow::renderHud(){
+    //Flat
+    consoleSprite->pos = vec2(-settings->windowSize.x/2, -settings->windowSize.y/2);
+    consoleSprite->text = format("FPS %d", fps);
+    if(debugActive){
+        consoleSprite->text += format("\nPos %0.2f %0.2f %0.2f", player->box.center.x, player->box.center.y, player->box.center.z);
+        consoleSprite->text += format("\nEye %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+        consoleSprite->text += format("\nLook %s %s %s", cameraLook.x>0?"x+":"x-", cameraLook.y>0?"y+":"y-", cameraLook.z>0?"z+":"z-");
+        consoleSprite->text += format("\nYaw %0.2f  Pitch %0.2f", degrees(cameraRotation.y), degrees(cameraRotation.x));
+    }
+    if(consoleActive){
+        consoleSprite->text += "\n\n";
+        for(int i=0;i<consoleOutput.size();i++){
+            consoleSprite->text += consoleOutput[i] + "\n";
+        }
+        consoleSprite->text += "\n>";
+        consoleSprite->text += consoleInput;
+        consoleSprite->text += tick%60>=30?"_":" ";
+    }
+    hud->compile();
+    
+    flatShader.use();
+    glUniform1i(flatShader.getUniformLocation("activeTexture"), 1);
+    glUniformMatrix4fv(flatShader.getUniformLocation("viewMatrix"), 1, false, &matrixHud[0][0]);
+    hud->render();
+    //
+    
+    testHologram->render(this);
 }
 
 void GraphicsWindow::charEvent(int codepoint){
@@ -371,10 +466,10 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
             }else if(key == GLFW_KEY_4){
                 if(lookRay.hit){
                     PointLight* lamp = new PointLight();
-                    lamp->position = lookRay.position;
+                    lamp->position = lookRay.position + vec3(0, 0.1, 0);
                     lamp->specular = vec3(1.0, 1.0, 1.0);
-                    lamp->attenuation = vec3(0, 1, 0);
-                    activeScene->pointLights.push_back(lamp);
+                    lamp->attenuation = vec3(1, 1, 0);
+                    activeScene->addPointLight(lamp);
                 }
             }else if(key == GLFW_KEY_5){
                 if(propToPlace){
@@ -384,7 +479,7 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                 propToPlace = new Prop(Models::sphere, Materials::defaultMaterial, vec3(0, 0, 0));
             }else if(key == GLFW_KEY_ENTER){
                 if(propToPlace && okayToPlace){
-                    activeScene->props.push_back(propToPlace);
+                    activeScene->addProp(propToPlace);
                     propToPlace = nullptr;
                 }
             }else if(key == GLFW_KEY_BACKSPACE){
@@ -392,7 +487,7 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                     delete propToPlace;
                     propToPlace = nullptr;
                 }else if(selectedProp){
-                    removeFromVector(activeScene->props, selectedProp);
+                    activeScene->removeProp(selectedProp);
                     selectedProp = nullptr;
                 }
             }else if(key == GLFW_KEY_F1){
@@ -406,7 +501,7 @@ void GraphicsWindow::mouseButtonEvent(int button, int action, int mods){
     if(button == GLFW_MOUSE_BUTTON_1){
         //printf("Place?\n");
         if(propToPlace && okayToPlace){
-            activeScene->props.push_back(propToPlace);
+            activeScene->addProp(propToPlace);
             propToPlace = nullptr;
             //printf("Placed\n");
         }
@@ -447,7 +542,6 @@ void resizeCallback(GLFWwindow* window, int width, int height){
         printf("Another window?\n");
     }
 }
-
 
 
 

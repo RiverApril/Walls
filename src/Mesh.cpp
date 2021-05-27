@@ -34,7 +34,7 @@ void Mesh::calculateRadii(){
 }
 
 
-void Mesh::draw(){
+void Mesh::draw(bool drawShadows){
     switch (status) {
         case noRender:
             break;
@@ -50,7 +50,11 @@ void Mesh::draw(){
             status = canRender;
             break;
         case canRender:
-            render();
+            if(drawShadows){
+                renderShadows();
+            } else {
+                render();
+            }
             break;
         case needsReset:
             cleanup();
@@ -90,18 +94,39 @@ void Mesh::render(){
     
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    CHECK_ERROR
     
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
     glEnableVertexAttribArray(3);
+    CHECK_ERROR
     
     glVertexAttribPointer(0, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToPosition);
     glVertexAttribPointer(1, 4, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToColor);
     glVertexAttribPointer(2, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToNormal);
     glVertexAttribPointer(3, 2, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToUV);
+    CHECK_ERROR
     
     glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0);
+    CHECK_ERROR
+}
+
+void Mesh::renderShadows(){
+    CHECK_ERROR
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    CHECK_ERROR
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    CHECK_ERROR
+    
+    glEnableVertexAttribArray(0);
+    CHECK_ERROR
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, Vertex::strideToEnd, (void *)Vertex::strideToPosition);
+    CHECK_ERROR
+    
+    glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0);
+    CHECK_ERROR
 }
 
 void Mesh::cleanup(){

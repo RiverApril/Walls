@@ -11,7 +11,7 @@
 #include "GraphicsWindow.hpp"
 #include "Geometry.hpp"
 
-
+#define FLY_MODE false
 
 ActorPlayer::ActorPlayer(Scene* scene){
     activeScene = scene;
@@ -29,7 +29,8 @@ bool ActorPlayer::tryToMove(vec3 diff){
     AABB diffBox = box;
     diffBox.center += diff;
     
-    for(Prop* p : activeScene->props){
+    auto props = activeScene->getProps();
+    for(Prop* p : props){
         if(p->box.intersects(diffBox) && !p->box.intersects(box)){
             hit = true;
             break;
@@ -63,7 +64,7 @@ void ActorPlayer::render(GraphicsWindow* gw){
     vec3 diff = vec3(0.0, 0.0, 0.0);
     
     const float jumpSpeed = 0.1;
-    const float moveSpeed = onGround ? 0.02 : 0.001;
+    const float moveSpeed = (onGround || FLY_MODE) ? 0.02 : 0.001;
     const float gravity = 0.005;
     const float groundInvFriction = 0.5;
     const float airInvFriction = 0.99;
@@ -71,9 +72,19 @@ void ActorPlayer::render(GraphicsWindow* gw){
     //printf("B Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
     
     if(!gw->consoleActive){
-        if(onGround){
+
+        if (FLY_MODE) {
             if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
-                diff.y += jumpSpeed;
+                diff.y += moveSpeed;
+            }
+            if(glfwGetKey(gw->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+                diff.y -= moveSpeed;
+            } 
+        } else {
+            if(onGround){
+                if(glfwGetKey(gw->window, GLFW_KEY_SPACE) == GLFW_PRESS){
+                    diff.y += jumpSpeed;
+                }
             }
         }
         
@@ -138,7 +149,8 @@ void ActorPlayer::render(GraphicsWindow* gw){
         yBox.center.y += clamp(velocity.y, -.1, .1);
     }
     
-    for(Prop* p : activeScene->props){
+    auto props = activeScene->getProps();
+    for(Prop* p : props){
         if(p->box.intersects(yBox) && !p->box.intersects(box)){
             onGround = velocity.y <= 0;
             velocity.y = 0;
@@ -146,13 +158,19 @@ void ActorPlayer::render(GraphicsWindow* gw){
         }
     }
     
-    if(onGround){
+    if(FLY_MODE){
         velocity.x *= groundInvFriction;
+        velocity.y *= groundInvFriction;
         velocity.z *= groundInvFriction;
     }else{
-        velocity.x *= airInvFriction;
-        velocity.z *= airInvFriction;
-        velocity.y -= gravity;
+        if(onGround){
+            velocity.x *= groundInvFriction;
+            velocity.z *= groundInvFriction;
+        }else{
+            velocity.x *= airInvFriction;
+            velocity.z *= airInvFriction;
+            velocity.y -= gravity;
+        }
     }
     
     gw->cameraPosition = box.center+vec3(0, box.radii.y, 0);

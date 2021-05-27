@@ -1,9 +1,9 @@
 CXX      := -clang++
-CXXFLAGS := -std=c++11 -Wall
+CXXFLAGS := -std=gnu++14 -Wall
 LDFLAGS  := -lglfw -lglew -lpng -framework OpenGL
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
-APP_DIR  := $(BUILD)/apps
+APP_DIR  := .
 TARGET   := Walls
 INCLUDE  := 
 SRC      :=                      \
@@ -39,7 +39,7 @@ release: all
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*
-	-@rm -rvf $(APP_DIR)/*
+	-@rm $(APP_DIR)/$(TARGET)
 
 info:
 	@echo "[*] Application dir: ${APP_DIR}     "

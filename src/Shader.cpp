@@ -56,7 +56,16 @@ bool ShaderProgram::link(){
         glAttachShader(pointer, shader);
     }
     glLinkProgram(pointer);
-    return true;
+    GLint success;
+    glGetProgramiv(pointer, GL_LINK_STATUS, &success);
+    if(success == 0){
+        int logLength;
+        glGetProgramiv(pointer, GL_INFO_LOG_LENGTH, &logLength);
+        char log[logLength];
+        glGetProgramInfoLog(pointer, logLength, 0, log);
+        fprintf(stderr, "Failed to link shader program: %s\n", log);
+    }
+    return success;
 }
 
 void ShaderProgram::use(){
@@ -68,6 +77,7 @@ int ShaderProgram::getUniformLocation(string s){
         int i = glGetUniformLocation(pointer, s.c_str());
         if(i == -1){
             printf("Uniform '%s' not found.\n", s.c_str());
+            exit(1);
         }else{
             uniformLocations[s] = i;
         }

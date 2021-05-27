@@ -18,18 +18,34 @@
 class GraphicsWindow;
 
 class Scene {
-    
-public:
+
+private:
     vector<Actor*> actors;
     
     vector<Prop*> props;
     
     vector<PointLight*> pointLights;
+
+    bool shadowsDirty;
     
+public:
+
+    Scene(): shadowsDirty(true){}
+    
+    void renderShadows(GraphicsWindow* gw);
     void render(GraphicsWindow* gw);
+
+    void addProp(Prop* prop);
+    void addActor(Actor* actor);
+    void addPointLight(PointLight* pointLight);
+
+    void removeProp(Prop* prop);
+    void removeActor(Actor* actor);
+    void removePointLight(PointLight* pointLight);
+
+    vector<Prop*> getProps();
     
     RayData rayProps(vec3 origin, vec3 look, float far = INFINITY);
-    
     
 };
 

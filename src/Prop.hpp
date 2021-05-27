@@ -42,6 +42,7 @@ public:
     
     virtual ~Prop(){}
     
+    virtual void renderShadows(GraphicsWindow* gw);
     virtual void render(GraphicsWindow* gw);
     
     

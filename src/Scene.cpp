@@ -11,21 +11,82 @@
 #include "Ray.hpp"
 #include "Texture.hpp"
 
+const float shadowAspect = 1.0f; // shadow resolution is square
+const float shadowNear = 0.01f;
+const float shadowFar = 25.0f;
+const mat4 shadowProj = perspective(radians(90.0f), shadowAspect, shadowNear, shadowFar);
+
+void Scene::renderShadows(GraphicsWindow *gw){
+
+    if(shadowsDirty){
+        shadowsDirty = false;
+
+        // start using shadow shader
+        gw->shadowShader.use();
+
+        glViewport(0, 0, gw->settings->shadowResolution, gw->settings->shadowResolution);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, gw->depthMapFBO);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if(status != 36053){
+            printf("Shadow Frambuffer status: %d\n", status);
+        }
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gw->depthCubemap, 0);
+        CHECK_ERROR
+        glClear(GL_DEPTH_BUFFER_BIT);
+        CHECK_ERROR
+
+        int count = std::min((int)pointLights.size(), 16);
+        for (int i = 0; i < count; i++) {
+
+            vec3 lightPos = pointLights[i]->position;
+
+            vector<mat4> shadowTransforms;
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3( 1.0, 0.0, 0.0), vec3(0.0,-1.0, 0.0)));
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3(-1.0, 0.0, 0.0), vec3(0.0,-1.0, 0.0)));
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3( 0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0)));
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3( 0.0,-1.0, 0.0), vec3(0.0, 0.0,-1.0)));
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3( 0.0, 0.0, 1.0), vec3(0.0,-1.0, 0.0)));
+            shadowTransforms.push_back(shadowProj * lookAt(lightPos, lightPos + vec3( 0.0, 0.0,-1.0), vec3(0.0,-1.0, 0.0)));
+            CHECK_ERROR
+            glUniform1f(gw->shadowShader.getUniformLocation("farPlane"), shadowFar);
+            CHECK_ERROR
+            glUniform3f(gw->shadowShader.getUniformLocation("lightPos"), lightPos.x, lightPos.y, lightPos.z);
+            CHECK_ERROR
+            glUniformMatrix4fv(gw->shadowShader.getUniformLocation("shadowMatrices[0]"), 6, false, &shadowTransforms[0][0][0]);
+            CHECK_ERROR
+            glUniform1i(gw->shadowShader.getUniformLocation("lightIndex"), i);
+            CHECK_ERROR
+
+            //draw props
+            for(Prop* p : props){
+                p->renderShadows(gw);
+            }
+            CHECK_ERROR
+            //
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+}
 
 void Scene::render(GraphicsWindow *gw){
     
     glUniform1i(gw->worldShader.getUniformLocation("activeTexture"), 0);
+    CHECK_ERROR
     
     //set lights
     
     int count = std::min((int)pointLights.size(), 16);
     glUniform1i(gw->worldShader.getUniformLocation("pointLightCount"), count);
+    glUniform1i(gw->worldShader.getUniformLocation("pointLightFarPlane"), shadowFar);
     for(int i=0;i<count;i++){
         string l = "pointLights["+to_string(i)+"]";
         glUniform3f(gw->worldShader.getUniformLocation(l+".position"), pointLights[i]->position.x, pointLights[i]->position.y, pointLights[i]->position.z);
         glUniform3f(gw->worldShader.getUniformLocation(l+".specular"), pointLights[i]->specular.r, pointLights[i]->specular.g, pointLights[i]->specular.b);
         glUniform3f(gw->worldShader.getUniformLocation(l+".attenuation"), pointLights[i]->attenuation.x, pointLights[i]->attenuation.y, pointLights[i]->attenuation.z);
     }
+    CHECK_ERROR
     //
     
     //draw props
@@ -33,6 +94,7 @@ void Scene::render(GraphicsWindow *gw){
         p->render(gw);
     }
     //
+    CHECK_ERROR
     
     //draw actors
     for(Actor* a : actors){
@@ -40,6 +102,7 @@ void Scene::render(GraphicsWindow *gw){
     }
     //
     
+    CHECK_ERROR
 }
 
 RayData Scene::rayProps(vec3 origin, vec3 look, float far){
@@ -63,5 +126,38 @@ RayData Scene::rayProps(vec3 origin, vec3 look, float far){
     return data;
 }
 
+void Scene::addProp(Prop* prop){
+    props.push_back(prop);
+    shadowsDirty = true;
+}
+
+void Scene::addActor(Actor* actor){
+    actors.push_back(actor);
+    shadowsDirty = true;
+}
+
+void Scene::addPointLight(PointLight* pointLight){
+    pointLights.push_back(pointLight);
+    shadowsDirty = true;
+}
+
+void Scene::removeProp(Prop* prop){
+    removeFromVector(props, prop);
+    shadowsDirty = true;
+}
+
+void Scene::removeActor(Actor* actor){
+    removeFromVector(actors, actor);
+    shadowsDirty = true;
+}
+
+void Scene::removePointLight(PointLight* pointLight){
+    removeFromVector(pointLights, pointLight);
+    shadowsDirty = true;
+}
+
+vector<Prop*> Scene::getProps(){
+    return props;
+}
 
 

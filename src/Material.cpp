@@ -9,7 +9,7 @@
 #include "Material.hpp"
 
 
-Material::Material(string filename, vec3 ambient, vec3 diffuse, vec3 specular, float shininess) : name(filename), diffuse(diffuse), ambient(ambient), specular(specular), shininess(shininess){
+Material::Material(string filename, vec3 ambient, vec3 diffuse, vec3 specular, float shininess) : name(filename), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess){
     
     
 }

@@ -36,7 +36,11 @@ using namespace glm;
 
 #define clamp(v, low, high) (v<low?low:(v>high?high:v))
 
+#define LIGHT_COUNT_MAX 32
+
 std::string format (const char *fmt, ...);
 std::string vformat (const char *fmt, va_list ap);
+
+#define CHECK_ERROR {GLuint error = glGetError(); if(error != GL_NO_ERROR){printf("%s:%d GL_ERROR: 0x%X\n", __FILE__, __LINE__, error); fflush(stdout); exit(1);}}
 
 #endif /* Headers_hpp */

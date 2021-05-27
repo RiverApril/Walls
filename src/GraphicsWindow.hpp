@@ -26,23 +26,22 @@ public:
     
     bool running;
     
-    
     GLFWwindow* window;
     ShaderProgram worldShader;
     ShaderProgram flatShader;
-    
+    ShaderProgram shadowShader;
     
     mat4 matrixProjection = identity<mat4>();
     mat4 matrixCamera = identity<mat4>();
-    
-    mat4 matrixView = identity<mat4>();
-    mat3 normalMatrix = identity<mat3>();
     
     mat4 matrixHud = identity<mat4>();
     
     vec3 cameraPosition = vec3(0, 0, 0);
     vec3 cameraRotation = vec3(0, 0, 0);
     vec3 cameraLook = vec3(0, 0, 0);
+
+    GLuint depthMapFBO;
+    GLuint depthCubemap;
     
     bool okayToPlace = false;
     Prop* selectedProp = nullptr;
@@ -87,8 +86,13 @@ public:
     bool initWindow();
     void startLoop();
     void makeProjectionMatrix();
+    void makeShadowBuffers();
     void proccessCommand(string command);
     void consoleAdd(string add);
+
+    void renderShadows();
+    void renderScene();
+    void renderHud();
     
     void keyEvent(int key, int scancode, int action, int mods);
     void mouseButtonEvent(int button, int action, int mods);

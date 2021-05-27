@@ -42,11 +42,12 @@ struct Mesh{
     Mesh();
     virtual ~Mesh(){}
     
-    void draw();
+    void draw(bool drawShadows);
     virtual void make(){}
     void calculateRadii();
     void compile();
     void render();
+    void renderShadows();
     void cleanup();
     
 };
