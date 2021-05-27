@@ -32,13 +32,13 @@ bool GraphicsWindow::initWindow(){
     }
     glfwMakeContextCurrent(window);
     
-    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+    // gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
     
-    //glewExperimental = GL_TRUE;
-    //if(glewInit() != GLEW_OK){
-    //    fprintf(stderr, "ERROR: Failed to start GLEW\n");
-    //    return false;
-    //}
+    glewExperimental = GL_TRUE;
+    if(glewInit() != GLEW_OK){
+       fprintf(stderr, "ERROR: Failed to start GLEW\n");
+       return false;
+    }
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
