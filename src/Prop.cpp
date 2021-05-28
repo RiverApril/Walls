@@ -22,15 +22,12 @@ void Prop::render(GraphicsWindow* gw){
     
     glUniformMatrix4fv(gw->worldShader.getUniformLocation("modelMatrix"), 1, false, &matrix[0][0]);
     
-    CHECK_ERROR
     glUniform3f(gw->worldShader.getUniformLocation("material.diffuse"), material->diffuse.r, material->diffuse.g, material->diffuse.b);
     glUniform3f(gw->worldShader.getUniformLocation("material.ambient"), material->ambient.r, material->ambient.g, material->ambient.b);
     glUniform3f(gw->worldShader.getUniformLocation("material.specular"), material->specular.r, material->specular.g, material->specular.b);
     glUniform1f(gw->worldShader.getUniformLocation("material.shininess"), material->shininess);
     
-    CHECK_ERROR
     mesh->draw(false);
-    CHECK_ERROR
 }
 
 void Prop::renderShadows(GraphicsWindow* gw){
@@ -42,7 +39,6 @@ void Prop::renderShadows(GraphicsWindow* gw){
     }
     
     glUniformMatrix4fv(gw->shadowShader.getUniformLocation("modelMatrix"), 1, false, &matrix[0][0]);
-    CHECK_ERROR
     
     mesh->draw(true);
 }

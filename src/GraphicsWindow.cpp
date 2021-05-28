@@ -38,7 +38,6 @@ bool GraphicsWindow::initWindow(){
        fprintf(stderr, "ERROR: Failed to start GLEW\n");
        return false;
     }
-    CHECK_ERROR
     
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
@@ -68,7 +67,6 @@ bool GraphicsWindow::initWindow(){
     
     makeProjectionMatrix();
     makeShadowBuffers();
-    CHECK_ERROR
     
     Models::initModels();
     Textures::initTextures();
@@ -173,15 +171,9 @@ void GraphicsWindow::makeProjectionMatrix(){
 void GraphicsWindow::makeShadowBuffers(){
 
     glGenTextures(1, &depthCubemap);
-    CHECK_ERROR
     glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, depthCubemap);
-    CHECK_ERROR
     glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_DEPTH_COMPONENT24, settings->shadowResolution, settings->shadowResolution, 6 * LIGHT_COUNT_MAX);
-    // for (unsigned int i = 0; i < 6 * LIGHT_COUNT_MAX; i ++) {
-    //     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + (i % 6), 0, GL_DEPTH_COMPONENT,
-    //         settings->shadowResolution, settings->shadowResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    // }
-    CHECK_ERROR
+
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -189,21 +181,13 @@ void GraphicsWindow::makeShadowBuffers(){
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_GREATER);
-    CHECK_ERROR
 
     glGenFramebuffers(1, &depthMapFBO);
-    CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    CHECK_ERROR
     for(int i = 0; i < LIGHT_COUNT_MAX; i++){
         glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-        CHECK_ERROR
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if(status != 36053){
-            printf("Initial Shadow Frambuffer %d status: %d\n", i, status);
-        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -226,15 +210,11 @@ void GraphicsWindow::startLoop(){
 
         // render scene with shadow mapping
         glViewport(0, 0, settings->windowSize.x*2, settings->windowSize.y*2);
-        CHECK_ERROR
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        CHECK_ERROR
         renderScene();
-        CHECK_ERROR
         //
 
         renderHud();
-        CHECK_ERROR
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -261,7 +241,6 @@ void GraphicsWindow::renderScene(){
     
     //start using world shader
     worldShader.use();
-    CHECK_ERROR
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, Textures::prop->pointer);
@@ -271,8 +250,6 @@ void GraphicsWindow::renderScene(){
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, depthCubemap);
-
-    CHECK_ERROR
     
     //set camera
     matrixCamera = identity<mat4>();
@@ -286,14 +263,11 @@ void GraphicsWindow::renderScene(){
     //
     
     //Render scene
-    CHECK_ERROR
     glUniform3f(worldShader.getUniformLocation("eye"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    CHECK_ERROR
 
     glUniform1i(worldShader.getUniformLocation("depthMap"), 2);
 
     activeScene->render(this);
-    CHECK_ERROR
     
     float yaw = cameraRotation.y;
     float pitch = cameraRotation.x;
@@ -356,7 +330,6 @@ void GraphicsWindow::renderScene(){
             selectedProp = lookRay.prop;
         }
     }
-    CHECK_ERROR
 }
 
 void GraphicsWindow::renderHud(){
