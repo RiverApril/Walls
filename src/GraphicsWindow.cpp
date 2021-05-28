@@ -468,7 +468,8 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
                     PointLight* lamp = new PointLight();
                     lamp->position = lookRay.position + vec3(0, 0.1, 0);
                     lamp->specular = vec3(1.0, 1.0, 1.0);
-                    lamp->attenuation = vec3(1, 1, 0);
+                    lamp->diffuse = vec3(1.0, 1.0, 1.0);
+                    lamp->attenuation = vec3(0, 0.5, 1);
                     activeScene->addPointLight(lamp);
                 }
             }else if(key == GLFW_KEY_5){

@@ -14,6 +14,7 @@ struct Material{
 struct PointLight{
     vec3 position;
     vec3 specular;
+    vec3 diffuse;
     vec3 attenuation; //quad, linear, const
 };
 
@@ -46,11 +47,11 @@ vec3 celShade(vec3 c){
     return vec3(celShade(c.r), celShade(c.g), celShade(c.b));
 }
 
-vec3 calculateShadow(vec3 surfaceToLight, int lightIndex) {
+float calculateShadow(vec3 surfaceToLight, int lightIndex) {
     float currentDepth = length(surfaceToLight) / pointLightFarPlane;
     float shadow = texture(depthMap, vec4(surfaceToLight, lightIndex), currentDepth);
 
-    return vec3(shadow, shadow, shadow);
+    return shadow;
 }
 
 void main() {
@@ -82,18 +83,18 @@ void main() {
                 float c = pointLights[i].attenuation.z;
                 float att = 1.0 / (a*dist*dist + b*dist + c);
 
-                vec3 shadow = calculateShadow(position - pointLights[i].position + normal * NORMAL_BIAS, i);
+                float shadow = calculateShadow(position - pointLights[i].position + normal * NORMAL_BIAS, i);
 
-                vec3 thisLightColor = att * (material.diffuse * NdotL);
+                vec3 diffuseLight = pointLights[i].diffuse * att * (material.diffuse * NdotL);
                 
                 vec3 V = eye - position;
                 vec3 H = normalize(surfaceToLight + V);
                 
                 float NdotH = max(dot(normal, H), 0.0);
                 
-                thisLightColor += pointLights[i].specular * att * material.specular * pow(NdotH, material.shininess);
+                vec3 specularLight = pointLights[i].specular * att * material.specular * pow(NdotH, material.shininess);
 
-                lightColor += (vec3(1.0) - shadow) * thisLightColor;
+                lightColor += (1.0 - shadow) * (diffuseLight + specularLight);
             }
         
         }
