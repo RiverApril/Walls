@@ -15,7 +15,7 @@ void Hologram::render(GraphicsWindow *gw){
     matrix = identity<mat4>();
     matrix = translate(matrix, pos);
     if(lockOnPlayer){
-        matrix = rotate(matrix, -gw->player->lookRotation.y, vec3(0, 1.0f, 0));
+        matrix = rotate(matrix, -gw->activeScene->getPlayer()->lookRotation.y, vec3(0, 1.0f, 0));
     }else{
         matrix = rotate(matrix, rot.z, vec3(0, 0, 1.0f));
         matrix = rotate(matrix, rot.x, vec3(1.0f, 0, 0));

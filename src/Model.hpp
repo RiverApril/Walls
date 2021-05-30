@@ -14,9 +14,10 @@
 
 struct Model : public Mesh{
     
+    string name;
     string filename;
     
-    Model(string filename);
+    Model(string name, string filename);
     ~Model(){}
     
     virtual void make();
@@ -24,6 +25,7 @@ struct Model : public Mesh{
 };
 
 namespace Models{
+    extern map<string, Model*> models;
     extern Model* monkey;
     extern Model* cube;
     extern Model* sphere;

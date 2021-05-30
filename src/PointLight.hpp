@@ -16,6 +16,10 @@ struct PointLight{
     vec3 specular = vec3(1, 1, 1);
     vec3 diffuse = vec3(1, 1, 1);
     vec3 attenuation = vec3(1, 0.25, 0.1);
+
+    string save();
 };
+
+PointLight* loadPointLight(stringstream& stream);
 
 #endif /* PointLight_hpp */

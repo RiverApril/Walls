@@ -16,6 +16,7 @@
 #include "Ray.hpp"
 
 class GraphicsWindow;
+class ActorPlayer;
 
 class Scene {
 
@@ -43,10 +44,15 @@ public:
     void removeActor(Actor* actor);
     void removePointLight(PointLight* pointLight);
 
+    string save();
+
     vector<Prop*> getProps();
+    ActorPlayer* getPlayer();
     
     RayData rayProps(vec3 origin, vec3 look, float far = INFINITY);
     
 };
+
+Scene* loadScene(stringstream& stream);
 
 #endif /* Scene_hpp */

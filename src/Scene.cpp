@@ -141,8 +141,99 @@ void Scene::removePointLight(PointLight* pointLight){
     shadowsDirty = true;
 }
 
-vector<Prop*> Scene::getProps(){
+vector<Prop*> Scene::getProps() {
     return props;
 }
 
+ActorPlayer* Scene::getPlayer() {
+    for(Actor* actor : actors){
+        ActorPlayer* player = dynamic_cast<ActorPlayer*>(actor);
+        if(player){
+            return player;
+        }
+    }
+    return nullptr;
+}
 
+
+string Scene::save() {
+    string data = "";
+
+    data += "scene v0\n";
+    for(Actor* actor : actors){
+        data += "actor ";
+        data += actor->save();
+        data += "\n";
+    }
+    for(Prop* prop : props){
+        data += "prop ";
+        data += prop->save();
+        data += "\n";
+    }
+    for(PointLight* pointLight : pointLights){
+        data += "pointLight ";
+        data += pointLight->save();
+        data += "\n";
+    }
+
+    return data;
+}
+
+Scene* loadScene(stringstream& stream) {
+    Scene* scene = new Scene();
+
+    string magicWord;
+    stream >> magicWord;
+    if(magicWord != "scene"){
+        printf("loadScene failed, not a scene file\n");
+        delete scene;
+        return nullptr;
+    }
+    string version;
+    stream >> version;
+    if (version == "v0") {
+        while (stream) {
+            string header;
+            stream >> header;
+            if (header.size() == 0) {
+                continue;
+            } else if (header == "actor") {
+                Actor* actor = loadActor(stream, scene);
+                if (actor) {
+                    scene->addActor(actor);
+                } else {
+                    printf("loadScene failed, failed to load actor\n");
+                    delete scene;
+                    return nullptr;
+                }
+            } else if (header == "prop") {
+                Prop* prop = loadProp(stream);
+                if (prop) {
+                    scene->addProp(prop);
+                } else {
+                    printf("loadScene failed, failed to load prop\n");
+                    delete scene;
+                    return nullptr;
+                }
+            } else if (header == "pointLight") {
+                PointLight* pointLight = loadPointLight(stream);
+                if (pointLight) {
+                    scene->addPointLight(pointLight);
+                } else {
+                    printf("loadScene failed, failed to load pointLight\n");
+                    delete scene;
+                    return nullptr;
+                }
+            } else {
+                printf("loadScene failed, unknown header: %s\n", header.c_str());
+                delete scene;
+                return nullptr;
+            }
+        }
+        return scene;
+    } else {
+        printf("loadScene failed, unknown version: %s\n", version.c_str());
+        delete scene;
+        return nullptr;
+    }
+}

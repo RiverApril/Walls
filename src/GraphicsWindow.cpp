@@ -8,6 +8,7 @@
 
 #include "GraphicsWindow.hpp"
 #include "Texture.hpp"
+#include "FileUtility.hpp"
 
 GraphicsWindow* graphicsWindowInstance;
 
@@ -76,7 +77,7 @@ bool GraphicsWindow::initWindow(){
     
     activeScene = new Scene();
     
-    player = new ActorPlayer(activeScene);
+    ActorPlayer* player = new ActorPlayer(activeScene);
     activeScene->addActor(player);
     
     player->box.center.y = 10;
@@ -337,6 +338,7 @@ void GraphicsWindow::renderHud(){
     consoleSprite->pos = vec2(-settings->windowSize.x/2, -settings->windowSize.y/2);
     consoleSprite->text = format("FPS %d", fps);
     if(debugActive){
+        ActorPlayer* player = activeScene->getPlayer();
         consoleSprite->text += format("\nPos %0.2f %0.2f %0.2f", player->box.center.x, player->box.center.y, player->box.center.z);
         consoleSprite->text += format("\nEye %0.2f %0.2f %0.2f", cameraPosition.x, cameraPosition.y, cameraPosition.z);
         consoleSprite->text += format("\nLook %s %s %s", cameraLook.x>0?"x+":"x-", cameraLook.y>0?"y+":"y-", cameraLook.z>0?"z+":"z-");
@@ -374,12 +376,40 @@ void GraphicsWindow::proccessCommand(string command){
     stringstream ss(command);
     string name;
     ss >> name;
-    if(name == "tp"){//tp x y z
+    if (name == "tp") { // tp x y z
         float x, y, z;
         ss >> x >> y >> z;
+        ActorPlayer* player = activeScene->getPlayer();
         player->box.center = vec3(x, y, z);
-    }else if(name == "clear"){
+    } else if(name == "clear") {
         consoleOutput.clear();
+    } else if(name == "save") { // save scenefile
+        string filename;
+        ss >> filename;
+
+        string sceneData = activeScene->save();
+        bool success = FileUtility::writeStringFile(filename, sceneData);
+        if (success) {
+            consoleAdd("Saved scene to file: " + filename);
+        } else {
+            consoleAdd("Failed to save scene to file: " + filename);
+        }
+    } else if(name == "load") { // load scenefile
+        string filename;
+        ss >> filename;
+
+        string sceneData = FileUtility::readStringFile(filename, "");
+        if(sceneData == ""){
+            consoleAdd("Failed to load scene from file: " + filename);
+        }
+        stringstream sceneStream(sceneData);
+        Scene* newScene = loadScene(sceneStream);
+        if(newScene){
+            activeScene = newScene;
+            consoleAdd("Loaded scene from file: " + filename);
+        } else {
+            consoleAdd("Invalid scene in file: " + filename);
+        }
     }
 }
 
@@ -404,14 +434,18 @@ void GraphicsWindow::keyEvent(int key, int scancode, int action, int mods){
     
     if(consoleActive){
         if(action == GLFW_PRESS){
-            if(key == GLFW_KEY_GRAVE_ACCENT){
+            if (key == GLFW_KEY_GRAVE_ACCENT) {
                 consoleActive = false;
-            }else if(key == GLFW_KEY_BACKSPACE){
+            } else if(key == GLFW_KEY_BACKSPACE){
                 consoleInput = consoleInput.substr(0, consoleInput.size()-1);
-            }else if(key == GLFW_KEY_ENTER){
-                consoleAdd(consoleInput);
-                proccessCommand(consoleInput);
-                consoleInput = "";
+            } else if(key == GLFW_KEY_ENTER){
+                if(consoleInput != ""){
+                    consoleAdd(consoleInput);
+                    proccessCommand(consoleInput);
+                    consoleInput = "";
+                }else{
+                    consoleActive = false;
+                }
             }
         }
     }else{

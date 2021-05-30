@@ -51,8 +51,6 @@ public:
     dvec2 mousePosPrev;
     dvec2 mousePosDelta;
     
-    ActorPlayer* player;
-    
     Scene* activeScene;
     
     long tick = 0;

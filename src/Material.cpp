@@ -9,12 +9,12 @@
 #include "Material.hpp"
 
 
-Material::Material(string filename, vec3 ambient, vec3 diffuse, vec3 specular, float shininess) : name(filename), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess){
-    
-    
+Material::Material(string name, vec3 ambient, vec3 diffuse, vec3 specular, float shininess) : name(name), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess){
+    Materials::materials.insert(pair<string, Material*>(name, this));
 }
 namespace Materials{
     
+    map<string, Material*> materials;
     Material* defaultMaterial;
     
     void initMaterials(){

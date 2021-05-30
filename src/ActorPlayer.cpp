@@ -178,3 +178,19 @@ void ActorPlayer::render(GraphicsWindow* gw){
     
     //printf("F Pos: %f, %f, %f\n", box.center.x, box.center.y, box.center.z);
 }
+
+string ActorPlayer::save() {
+    return format("player %f %f %f   %s", 
+        velocity.x, velocity.y, velocity.z, 
+        Actor::save().c_str());
+}
+
+ActorPlayer* loadPlayer(stringstream& stream, Scene* scene) {
+    ActorPlayer* player = new ActorPlayer(scene);
+    vec3 velocity;
+    stream >> velocity.x >> velocity.y >> velocity.z;
+
+    player->velocity = velocity;
+    player->onGround = false;
+    return player;
+}

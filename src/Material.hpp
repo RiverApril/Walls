@@ -20,12 +20,13 @@ struct Material {
     vec3 specular = vec3(1, 1, 1);
     float shininess = 0;
     
-    Material(string filename, vec3 ambient, vec3 diffuse, vec3 specular, float shininess);
+    Material(string name, vec3 ambient, vec3 diffuse, vec3 specular, float shininess);
     ~Material(){}
     
 };
 
 namespace Materials{
+    extern map<string, Material*> materials;
     extern Material* defaultMaterial;
     
     void initMaterials();

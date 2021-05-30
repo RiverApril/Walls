@@ -13,6 +13,7 @@
 #include "Geometry.hpp"
 
 class GraphicsWindow;
+class Scene;
 
 class Actor{
 public:
@@ -24,7 +25,11 @@ public:
     virtual ~Actor(){}
     
     virtual void render(GraphicsWindow* gw){}
+
+    virtual string save();
     
 };
+
+Actor* loadActor(stringstream& stream, Scene* scene);
 
 #endif /* Actor_hpp */

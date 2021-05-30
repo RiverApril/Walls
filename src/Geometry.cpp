@@ -93,6 +93,19 @@ bool AABB::intersects(vec3 origin, vec3 look, vec3& hit, float& dist, Side& side
     }
 }
 
+string AABB::save(){
+    return format("%f %f %f  %f %f %f ", 
+        center.x, center.y, center.z,
+        radii.x, radii.y, radii.z);
+}
+
+AABB loadAABB(stringstream& stream) {
+    AABB aabb;
+    stream >> aabb.center.x >> aabb.center.y >> aabb.center.z;
+    stream >> aabb.radii.x >> aabb.radii.y >> aabb.radii.z;
+    return aabb;
+}
+
 float roundTo(float v, float m){
     return round(v * m) / m;
 }
@@ -100,4 +113,3 @@ float roundTo(float v, float m){
 vec3 roundTo(vec3 v, float m){
     return vec3(roundTo(v.x, m), roundTo(v.y, m), roundTo(v.z, m));
 }
-

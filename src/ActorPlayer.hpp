@@ -29,7 +29,11 @@ public:
     
     virtual void render(GraphicsWindow* gw);
     bool tryToMove(vec3 diff);
+
+    virtual string save();
     
 };
+
+ActorPlayer* loadPlayer(stringstream& stream, Scene* scene);
 
 #endif /* ActorPlayer_hpp */

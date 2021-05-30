@@ -10,7 +10,8 @@
 #include "FileUtility.hpp"
 
 
-Model::Model(string filename) : filename(filename){
+Model::Model(string name, string filename) : name(name), filename(filename){
+    Models::models.insert(pair<string, Model*>(name, this));
     status = needsMake;
 }
 
@@ -102,21 +103,21 @@ void Model::make(){
     
     printf("Failed To Make Model: %s\n", filename.c_str());
     
-    
-    
 }
 
 
 namespace Models{
+    
+    map<string, Model*> models;
     
     Model* monkey;
     Model* cube;
     Model* sphere;
     
     void initModels(){
-        monkey = new Model("models/monkey.obj");
-        cube = new Model("models/cube.obj");
-        sphere = new Model("models/sphere.obj");
+        monkey = new Model("monkey", "models/monkey.obj");
+        cube = new Model("cube", "models/cube.obj");
+        sphere = new Model("sphere", "models/sphere.obj");
     }
     
 }

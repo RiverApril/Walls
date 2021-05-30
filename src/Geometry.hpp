@@ -36,7 +36,11 @@ struct AABB{
     bool intersects(AABB& other);
     
     bool intersects(vec3 origin, vec3 look, vec3& hit, float& dist, Side& side);
+
+    string save();
 };
+
+AABB loadAABB(stringstream& stream);
 
 float roundTo(float v, float m);
 vec3 roundTo(vec3 v, float m);

@@ -11,7 +11,7 @@
 
 #include "Headers.hpp"
 
-namespace FileUtility{
+namespace FileUtility {
     
     string readStringFile(string filename, string def);
     

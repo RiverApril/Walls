@@ -20,11 +20,9 @@ class GraphicsWindow;
 class Prop{
 public:
     
-    AABB box;
-    
-    mat4 matrix;
     Mesh* mesh;
     Material* material;
+    AABB box;
     bool mustScale;
     
     Prop(Mesh* mesh, Material* material, vec3 pos) : mesh(mesh), material(material){
@@ -39,13 +37,18 @@ public:
         box.center = pos;
         mustScale = true;
     }
+
+    Prop(Mesh* mesh, Material* material, AABB box, bool mustScale): mesh(mesh), material(material), box(box), mustScale(mustScale){}
     
     virtual ~Prop(){}
     
     virtual void renderShadows(GraphicsWindow* gw);
     virtual void render(GraphicsWindow* gw);
     
+    virtual string save();
     
 };
+
+Prop* loadProp(stringstream& stream);
 
 #endif /* Prop_hpp */
