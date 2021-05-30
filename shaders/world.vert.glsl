@@ -20,7 +20,7 @@ void main() {
 	
 	transferPosition = vec3(modelMatrix * vec4(vertexPosition, 1.0));;
     transferColor = vertexColor;
-    transferNormal = transpose(inverse(mat3(modelMatrix))) * vertexNormal;;
+    transferNormal = normalize(transpose(inverse(mat3(modelMatrix))) * vertexNormal);
     transferUV.x = vertexUV.x;
     transferUV.y = 1.0f - vertexUV.y;
 }

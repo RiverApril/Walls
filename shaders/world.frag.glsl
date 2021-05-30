@@ -94,7 +94,7 @@ void main() {
                 
                 vec3 specularLight = pointLights[i].specular * att * material.specular * pow(NdotH, material.shininess);
 
-                lightColor += (1.0 - shadow) * (diffuseLight + specularLight);
+                lightColor = max(lightColor, (1.0 - shadow) * (diffuseLight + specularLight));
             }
         
         }
